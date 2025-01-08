@@ -29,6 +29,14 @@ export default function handler(req, res) {
 
   // Handle POST request (incoming messages)
   if (req.method === "POST") {
+    
+    if( req.body.entry[0].changes){
+      if( req.body.entry[0].changes[0].field=="comments"){
+        const sender_id = req.body.entry[0].changes[0].value.from.id;
+        sendMessage(sender_id," Thanks for commenting! would you like to start planning tirp 🧳🏖");
+      }
+    }
+    
     if (req.body.entry[0].messaging) {
       const messagingEvents = req.body.entry[0].messaging;
       messagingEvents.forEach((event) => {
@@ -41,9 +49,10 @@ export default function handler(req, res) {
           //   ;
           const text = event.message.text;
           console.log(event);
-          sendLangflowMessage(text, event.sender.id)
-            .then((result) => replay(event.sender.id, result))
-            .catch((error) => console.error(error));
+          sendLangflowMessage(text, senderId)
+            .then((result) => replay(senderId, result))
+            .catch((error) => {sendMessage(senderId,"We have encountered some error. Please try again later")
+              console.error(error)});
         }
       });
     }

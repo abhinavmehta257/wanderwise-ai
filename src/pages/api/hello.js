@@ -1,5 +1,8 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 
-export default function handler(req, res) {
-  res.status(200).json({ name: "John Doe" });
+import { callAssistant } from "../../../utils/openAi";
+
+export default async function handler(req, res) {
+ const msg= await callAssistant("hi","1212121");
+ return res.json(msg)
 }

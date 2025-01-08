@@ -1,8 +1,9 @@
 import { getConversationId } from "./insta";
+import OpenAI from "openai";
+const openai = new OpenAI({ apiKey: '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' });
 
 export async function sendLangflowMessage(message, user_id) {
-  const url =
-    "https://api.langflow.astra.datastax.com/lf/6f410314-b88d-4319-b359-845184d0b5ae/api/v1/run/97e6af6d-d2cf-42fd-a410-a528b75760f4";
+  const url =process.env.LANF_FLOW_URL;
   const conversation_id = await getConversationId(user_id);
 
   // Request configuration
@@ -33,9 +34,43 @@ export async function sendLangflowMessage(message, user_id) {
     }
 
     const data = await response.json();
-
     return data.outputs[0].outputs[0].results.message.text;
   } catch (error) {
-    throw new Error(`Error making request: ${error.message}`);
+    // return "we have encountered some error, please repeat your answer";
+
+    throw new Error({err:`Error making request: ${error.message}`,message:"we have encountered some error, please repeat your answer"});
   }
+}
+
+export const callAssistant = async (message_text, user_id)=>{
+  // const conversation_id = await getConversationId(user_id);
+
+  const thread = await openai.beta.threads.create({thread_id:"123123"});
+  console.log(thread);
+  
+  const message = await openai.beta.threads.messages.create(
+    thread.id,
+    {
+      role: "user",
+      content: message_text
+    }
+    );
+    let run = await openai.beta.threads.runs.createAndPoll(
+      thread.id,
+      { 
+        assistant_id: "asst_MdQvLytr35uEM52fKsRSuhEX",
+      }
+      );
+  if (run.status === 'completed') {
+    const messages = await openai.beta.threads.messages.list(
+      run.thread_id
+    );
+    // for (const message of messages.data.reverse()) {
+    //   console.log(`${message.role} > ${message.content[0].text.value}`);
+    // }
+    console.log(messages.data[0].content[0].text.value);
+    return messages.data[0].content[0].text.value;
+  } else {
+    console.log(run.status);
+  }    
 }

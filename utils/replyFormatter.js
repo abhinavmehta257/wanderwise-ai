@@ -12,9 +12,9 @@ export const replay = async (user_id, text) => {
   const data = JSON.parse(text);
   const { prompt, suggestions } = data;
   if (!suggestions) {
-    await sendMessage(user_id, prompt);
+    sendMessage(user_id, prompt);
   } else if (!data.collection_done) {
-    await sendQuickReply(user_id, prompt, suggestions);
+    sendQuickReply(user_id, prompt, suggestions);
   } else if (data.collection_done) {
     sendButtonTemplate(
       user_id,
@@ -23,7 +23,7 @@ export const replay = async (user_id, text) => {
       "https://wisesquirrel.netlify.app/"
     );
   } else {
-    await sendMessage(
+    sendMessage(
       user_id,
       "We have encountered some error. Please try again later"
     );
