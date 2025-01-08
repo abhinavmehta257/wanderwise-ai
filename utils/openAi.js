@@ -1,6 +1,6 @@
 import { getConversationId } from "./insta";
 import OpenAI from "openai";
-const openai = new OpenAI({ apiKey: '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' });
+const openai = new OpenAI({ apiKey: '' });
 
 export async function sendLangflowMessage(message, user_id) {
   const url =process.env.LANF_FLOW_URL;
