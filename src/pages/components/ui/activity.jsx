@@ -11,9 +11,9 @@ const Activity = ({ activity }) => (
 
 const Activities = ({activities}) => (
     <div className="activities">
-        {activities.map((activity, index) => (
+        {activities ? activities.map((activity, index) => (
             <Activity key={index} activity={activity} />
-        ))}
+        )):null}
     </div>
 );
 
