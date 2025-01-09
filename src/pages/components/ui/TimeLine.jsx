@@ -17,7 +17,7 @@ const Timeline = ({itinerary, start_date}) => {
   return (
     <ol className="relative border-s border-gray-200 border-t-0 border-dashed ">  
       {itinerary ? itinerary.map((item, index) => (
-        <li className="ms-4 mb-4" key={index}>
+        <li className="ms-4" key={index}>
             <div className="absolute w-3 h-3 bg-[#21BCBE] rounded-full mt-2 -start-1.5 border border-[#21BCBE]"></div>
             <h3 className="font-semibold text-black text-[20px]">{item.title}</h3>
             <time className="mb-1 text-sm font-normal leading-none text-black">{addDays(start_date, index)}</time>

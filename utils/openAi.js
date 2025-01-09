@@ -42,7 +42,7 @@ export async function sendLangflowMessage(message, user_id) {
   }
 }
 
-export const callAssistant = async (message_text, user_id)=>{
+export const callAssistant = async (message_text, user_id, assistant_id = "asst_MdQvLytr35uEM52fKsRSuhEX")=>{
   // const conversation_id = await getConversationId(user_id);
 
   const thread = await openai.beta.threads.create({thread_id:"123123"});
@@ -58,7 +58,7 @@ export const callAssistant = async (message_text, user_id)=>{
     let run = await openai.beta.threads.runs.createAndPoll(
       thread.id,
       { 
-        assistant_id: "asst_MdQvLytr35uEM52fKsRSuhEX",
+        assistant_id: assistant_id,
       }
       );
   if (run.status === 'completed') {
@@ -74,3 +74,4 @@ export const callAssistant = async (message_text, user_id)=>{
     console.log(run.status);
   }    
 }
+

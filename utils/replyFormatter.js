@@ -1,3 +1,4 @@
+import { callAssistant } from "./openAi";
 import { sendButtonTemplate, sendMessage, sendQuickReply } from "./sendMessage";
 
 export const createQuickReplies = (items) => {
@@ -13,15 +14,14 @@ export const replay = async (user_id, text) => {
   const { prompt, suggestions } = data;
   if (!suggestions) {
     sendMessage(user_id, prompt);
-  } else if (!data.collection_done) {
+  } else if (!data.trip_details.is_finalized) {
     sendQuickReply(user_id, prompt, suggestions);
-  } else if (data.collection_done) {
-    sendButtonTemplate(
+  } else if (data.trip_details.is_finalized) {
+    sendMessage(
       user_id,
-      "https://wisesquirrel.netlify.app/",
-      "Check Now",
-      "https://wisesquirrel.netlify.app/"
+      "Plesae wait while we generate your trip details"
     );
+    await callAssistant(data.trip_details, user_id, "asst_xNE0S4tbeV82C0u6NGajPlVc");
   } else {
     sendMessage(
       user_id,

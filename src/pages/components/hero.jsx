@@ -2,11 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 
-const Hero = ({ destination ,description, trip_duration}) => {
+const Hero = ({ destination ,description, trip_duration, destination_image_url}) => {
     return (
         <div className='text-[black] py-[16px]'>
-            <div className='rounded-lg overflow-hidden shadow-lg'>
-                <img src="https://placehold.co/600x400" alt="" srcset="" />
+            <div className='rounded-lg w-full '>
+                <img src={destination_image_url} alt="" className='w-full sm:h-[200px] md:h-[400px] lg:h-[400px] object-cover rounded-md' srcset="" />
             </div>
             <div className='mt-4'>
                 <div className='py-2'>
