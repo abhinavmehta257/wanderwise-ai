@@ -15,14 +15,16 @@ const TripPage = ({ trip }) => {
   const {itinerary} = trip.data;
   const {destination_image_url} = trip;
   return (
-  <div className='bg-white flex justify-center'>
+    <>
+  {trip ? <div className='bg-white flex justify-center'>
     <div className="px-[24px] md:w-[70%] lg:w-[70%] sm:w-[100%] h-full">
         <div className="py-[16px]">
           <Hero description={description} destination={destination} trip_duration={trip_duration} destination_image_url={destination_image_url}/>
         </div>
         <Itinerary itinerary={itinerary} start_date={start_date}/>
     </div>
-  </div>
+  </div> : <Skeleton/>}
+  </>
   );
 }
 
