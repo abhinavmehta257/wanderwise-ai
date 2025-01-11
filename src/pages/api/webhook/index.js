@@ -1,11 +1,12 @@
 // import { sendMessage } from "@/utils/sendMessage";
 
 import { getConversationId } from "../../../../utils/insta";
-import { sendLangflowMessage } from "../../../../utils/openAi";
+import { callAssistant, sendLangflowMessage } from "../../../../utils/openAi";
 import { replay } from "../../../../utils/replyFormatter";
 import {
   sendMessage,
   sendQuickReply,
+  sendTyping,
   sendTypingOn,
 } from "../../../../utils/sendMessage";
 
@@ -38,19 +39,19 @@ export default async function handler(req, res) {
     }
     
     if (req.body.entry[0].messaging) {
-      const messagingEvents = req.body.entry[0].messaging;
-      messagingEvents.forEach(async (event) => {
-        const senderId = event.sender.id;
-        if (event.message && event.message.text && !event.message.is_echo) {
-          const text = event.message.text;
-          console.log(event);
-          await sendLangflowMessage(text, senderId)
+      const messagingEvents = req.body.entry[0].messaging[0];
+      // Check if the event is a message and not an echo
+        if (messagingEvents.message && messagingEvents.message.text && !messagingEvents.message.is_echo) {
+          const text = messagingEvents.message.text;
+          const senderId = messagingEvents.sender.id;
+          console.log(messagingEvents);
+          await callAssistant(text, senderId)
             .then((result) => replay(senderId, result))
             .catch((error) => {sendMessage(senderId,"We have encountered some error. Please try again later")
               console.error(error)});
         }
-      });
     }
+
     return res.status(200).send("EVENT_RECEIVED");
   } else if (req.body.entry[0].changes) {
     console.log(req.body.entry[0].changes[0]);

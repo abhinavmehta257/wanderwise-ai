@@ -1,4 +1,4 @@
-import { callAssistant } from "./openAi";
+import { callAssistant, getGeneratedTrip } from "./openAi";
 import { sendButtonTemplate, sendMessage, sendQuickReply } from "./sendMessage";
 
 export const createQuickReplies = (items) => {
@@ -12,7 +12,9 @@ export const replay = async (user_id, text) => {
 
   const data = JSON.parse(text);
   const { prompt, suggestions } = data;
-  if (!suggestions) {
+  console.log(data.trip_details.is_finalized);
+  
+  if ((!suggestions || suggestions.length === 0)&& !data.trip_details.is_finalized) {
     sendMessage(user_id, prompt);
   } else if (!data.trip_details.is_finalized) {
     sendQuickReply(user_id, prompt, suggestions);
@@ -21,7 +23,12 @@ export const replay = async (user_id, text) => {
       user_id,
       "Plesae wait while we generate your trip details"
     );
-    await callAssistant(data.trip_details, user_id, "asst_xNE0S4tbeV82C0u6NGajPlVc");
+    const slug = await getGeneratedTrip(user_id, data.trip_details.destination, data.trip_details.number_of_days);
+    sendButtonTemplate(
+      user_id,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/trip/${slug}`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/trip/${slug}`
+    );
   } else {
     sendMessage(
       user_id,

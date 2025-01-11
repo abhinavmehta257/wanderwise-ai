@@ -20,7 +20,15 @@ const TripPage = ({ trip }) => {
     <>
     <Head>
       <title>{title ? title : ""} | Wanderwise</title>
-      
+      <meta name="description" content={description} />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:image" content={destination_image_url} />
+      <meta property="og:url" content={`https://wanderwise.vercel.app/trip/${trip.slug}`} />
+      <meta property="og:type" content="website" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@wanderwise" />
+      <meta name="twitter:creator" content="@wanderwise" />
     </Head>
   {trip ? <div className='bg-white flex justify-center'>
     <div className="px-[24px] md:w-[70%] lg:w-[70%] sm:w-[100%] h-full">

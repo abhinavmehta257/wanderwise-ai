@@ -25,7 +25,7 @@ export const sendMessage = async (userId, messageText) => {
     throw error;
   }
 };
-export const sendTypingOn = async (userId) => {
+export const sendTyping = async (userId, is_typing) => {
   let response;
   console.log(userId);
 
@@ -34,7 +34,7 @@ export const sendTypingOn = async (userId) => {
       url,
       {
         recipient: { id: userId },
-        sender_action: "typing_on",
+        sender_action: is_typing ? "typing_on" : "typing_off",
       },
       {
         headers: {
@@ -83,7 +83,6 @@ export const sendQuickReply = async (userId, messageText, quickReplies) => {
 export const sendButtonTemplate = async (
   userId,
   imageUrl,
-  buttonText,
   buttonUrl
 ) => {
   let response;
@@ -97,12 +96,12 @@ export const sendButtonTemplate = async (
             type: "template",
             payload: {
               template_type: "button",
-              text: "Check this out!",
+              text: "Click below to view your trip details",
               buttons: [
                 {
                   type: "web_url",
                   url: buttonUrl,
-                  title: buttonText,
+                  title: "Check out now!",
                   webview_height_ratio: "full",
                   image_url: imageUrl,
                 },
