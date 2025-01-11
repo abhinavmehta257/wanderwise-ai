@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     if( req.body.entry[0].changes){
       if( req.body.entry[0].changes[0].field=="comments"){
         const sender_id = req.body.entry[0].changes[0].value.from.id;
-        sendMessage(sender_id," Thanks for commenting! would you like to start planning tirp 🧳🏖");
+        sendQuickReply(sender_id,"Thanks for commenting! would you like to start planning tirp 🧳🏖",['Yes, lets start planning']);
       }
     }
     

@@ -10,10 +10,10 @@ export default function Home() {
      crossorigin="anonymous"></script>
      <meta name="google-adsense-account" content="ca-pub-9744648621612550"></meta>
     </Head>
-   <div className="px-[24px] bg-[white] h-full">
-      
-      main
-   </div>
+    <div className="px-[24px] bg-[white] h-full">
+        
+        main
+    </div>
    </>
   );
 }
