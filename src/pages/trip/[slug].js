@@ -5,6 +5,7 @@ import Itinerary from '../components/Itinerary';
 import Hero from '../components/hero';
 import Skeleton from '../components/ui/Skeleton';
 import connectDB from '../../../db/db';
+import NavBar from '../components/ui/NavBar';
 
 const TripPage = ({ trip }) => {
   // const { slug } = router.query;
@@ -29,15 +30,17 @@ const TripPage = ({ trip }) => {
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@wanderwise" />
       <meta name="twitter:creator" content="@wanderwise" />
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9744648621612550"
+        crossorigin="anonymous"></script>
     </Head>
-  {trip ? <div className='bg-white flex justify-center'>
-    <div className="px-[24px] md:w-[70%] lg:w-[70%] sm:w-[100%] h-full">
-        <div className="py-[16px]">
-          <Hero description={description} destination={destination} trip_duration={trip_duration} destination_image_url={destination_image_url}/>
-        </div>
-        <Itinerary itinerary={itinerary} start_date={start_date}/>
-    </div>
-  </div> : <Skeleton/>}
+    {trip ? <div className='bg-white flex justify-center'>
+      <div className="px-[24px] md:w-[70%] lg:w-[70%] sm:w-[100%] h-full">
+          <div className="py-[16px]">
+            <Hero description={description} destination={destination} trip_duration={trip_duration} destination_image_url={destination_image_url}/>
+          </div>
+          <Itinerary itinerary={itinerary} start_date={start_date}/>
+      </div>
+    </div> : <Skeleton/>}
   </>
   );
 }
