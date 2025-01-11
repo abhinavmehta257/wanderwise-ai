@@ -28,7 +28,8 @@ const Index = () => {
         <>
         <Head>
             <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9744648621612550"
-        crossorigin="anonymous"></script>
+     crossorigin="anonymous"></script>
+     <meta name="google-adsense-account" content="ca-pub-9744648621612550"></meta>
         </Head>
             <div className='flex align-center justify-center bg-white h-[100vh] overflow-scroll p-[32px]'>
                 <div className=' h-full  md:w-[70%] lg:w-[70%] sm:w-[100%]'>

@@ -31,7 +31,8 @@ const TripPage = ({ trip }) => {
       <meta name="twitter:site" content="@wanderwise" />
       <meta name="twitter:creator" content="@wanderwise" />
       <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9744648621612550"
-        crossorigin="anonymous"></script>
+     crossorigin="anonymous"></script>
+     <meta name="google-adsense-account" content="ca-pub-9744648621612550"></meta>
     </Head>
     {trip ? <div className='bg-white flex justify-center'>
       <div className="px-[24px] md:w-[70%] lg:w-[70%] sm:w-[100%] h-full">
