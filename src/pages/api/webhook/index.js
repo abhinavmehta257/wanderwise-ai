@@ -39,14 +39,9 @@ export default async function handler(req, res) {
     
     if (req.body.entry[0].messaging) {
       const messagingEvents = req.body.entry[0].messaging;
-      messagingEvents.forEach((event) => {
+      messagingEvents.forEach(async (event) => {
         const senderId = event.sender.id;
         if (event.message && event.message.text && !event.message.is_echo) {
-          // Call GPT-4 API or custom logic for responses
-          //   generateRes();
-          //   sendTypingOn();
-          //   sendQuickReply(senderId, "response");
-          //   ;
           const text = event.message.text;
           console.log(event);
           await sendLangflowMessage(text, senderId)
