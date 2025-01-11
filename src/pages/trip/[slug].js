@@ -19,7 +19,8 @@ const TripPage = ({ trip }) => {
   return (
     <>
     <Head>
-    <title>{title ? title : ""} | Wanderwise</title>
+      <title>{title ? title : ""} | Wanderwise</title>
+      
     </Head>
   {trip ? <div className='bg-white flex justify-center'>
     <div className="px-[24px] md:w-[70%] lg:w-[70%] sm:w-[100%] h-full">

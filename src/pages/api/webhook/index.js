@@ -9,7 +9,7 @@ import {
   sendTypingOn,
 } from "../../../../utils/sendMessage";
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   // Handle GET request (verification)
   if (req.method === "GET") {
     const VERIFY_TOKEN = process.env.INSTA_VERIFICATION_STRING;
@@ -49,7 +49,7 @@ export default function handler(req, res) {
           //   ;
           const text = event.message.text;
           console.log(event);
-          sendLangflowMessage(text, senderId)
+          await sendLangflowMessage(text, senderId)
             .then((result) => replay(senderId, result))
             .catch((error) => {sendMessage(senderId,"We have encountered some error. Please try again later")
               console.error(error)});
