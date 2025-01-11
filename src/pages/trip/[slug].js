@@ -1,8 +1,10 @@
+import Head from 'next/head';
 import TripDetails from '../../../model/itinerary';
 
 import Itinerary from '../components/Itinerary';
 import Hero from '../components/hero';
 import Skeleton from '../components/ui/Skeleton';
+import connectDB from '../../../db/db';
 
 const TripPage = ({ trip }) => {
   // const { slug } = router.query;
@@ -13,9 +15,12 @@ const TripPage = ({ trip }) => {
   }
   const {destination, trip_duration, description, start_date} = trip.data.overview;
   const {itinerary} = trip.data;
-  const {destination_image_url} = trip;
+  const {destination_image_url,title} = trip;
   return (
     <>
+    <Head>
+    <title>{title ? title : ""} | Wanderwise</title>
+    </Head>
   {trip ? <div className='bg-white flex justify-center'>
     <div className="px-[24px] md:w-[70%] lg:w-[70%] sm:w-[100%] h-full">
         <div className="py-[16px]">
@@ -29,6 +34,7 @@ const TripPage = ({ trip }) => {
 }
 
 export async function getServerSideProps({ params }) {
+  await connectDB();
   const trip = await TripDetails.findOne({ slug: params.slug }).lean();
 
   return {
