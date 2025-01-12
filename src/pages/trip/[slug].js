@@ -9,7 +9,8 @@ import NavBar from '../components/ui/NavBar';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import BlogCard from '../components/ui/BlogCard';
-import Footer  from '../components/ui/Footer';
+import Footer from '../components/ui/Footer';
+
 
 const TripPage = ({ trip }) => {
   if (!trip) {

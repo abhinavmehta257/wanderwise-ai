@@ -6,8 +6,7 @@ import BlogCard from './components/ui/BlogCard';
 import Skeleton from './components/ui/Skeleton';
 import Head from 'next/head';
 import NavBar from './components/ui/NavBar';
-import Footer  from '../components/ui/Footer';
-
+import Footer from './components/ui/Footer';
 
 
 const Index = () => {
@@ -33,6 +32,7 @@ const Index = () => {
             <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9744648621612550"
                 crossorigin="anonymous"></script>
             <meta name="google-adsense-account" content="ca-pub-9744648621612550"></meta>
+            <title>All Trips | Wanderwise</title>
         </Head>
             <NavBar />
             <div className='flex align-center justify-center px-[32px] mb-[32px]'>
