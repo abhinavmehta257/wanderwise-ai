@@ -33,7 +33,7 @@ const Itinerary = ({itinerary, start_date, local_tips, budget_breakdown}) => {
             </div>
             <div className="space-y-2 border-t mt-[28px]">
                 <h1 className='text-[24px] font-bold mt-4'>Budget</h1>
-            {Object.entries(budget_breakdown).map(([key, value], index, array) => (
+            {budget_breakdown ? Object.entries(budget_breakdown).map(([key, value], index, array) => (
               <div key={key}>
                 <div className="flex justify-between">
                   <span className="capitalize">{key}</span>
@@ -41,7 +41,7 @@ const Itinerary = ({itinerary, start_date, local_tips, budget_breakdown}) => {
                 </div>
                 {index < array.length - 1 && <hr className="my-2" />}
               </div>
-            ))}
+            )) : null}
           </div>
         </div>
     );
