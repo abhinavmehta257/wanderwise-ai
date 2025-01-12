@@ -6,7 +6,8 @@ export default async function handler(req, res) {
   await connectDB();
 
   if (req.method === 'GET') {
-    const trips = await TripDetails.find({}).lean();
+    const limit = parseInt(req.query.limit) || 10;
+    const trips = await TripDetails.find({}).limit(limit).lean();
     const tripDetails = trips.map(trip => ({
       slug: trip.slug,
       title: trip.title,
@@ -18,6 +19,7 @@ export default async function handler(req, res) {
         day: 'numeric'
       })
     }));
+    
     res.status(200).json(tripDetails);
   }
 

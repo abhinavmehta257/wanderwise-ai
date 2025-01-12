@@ -6,17 +6,36 @@ import Hero from '../components/hero';
 import Skeleton from '../components/ui/Skeleton';
 import connectDB from '../../../db/db';
 import NavBar from '../components/ui/NavBar';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import BlogCard from '../components/ui/BlogCard';
+import { Footer } from '../components/ui/Footer';
 
 const TripPage = ({ trip }) => {
-  // const { slug } = router.query;
-  // const { slug } = router.query;
-
   if (!trip) {
     return (<Skeleton />);
   }
   const {destination, trip_duration, description, start_date} = trip.data.overview;
-  const {itinerary} = trip.data;
-  const {destination_image_url,title} = trip;
+  const {itinerary, local_tips, budget_breakdown} = trip.data;
+  const {destination_image_url,title, } = trip;
+
+  const [trips, setTrips] = useState(null);
+
+    useEffect(() => {
+        const fetchTrips = async () => {
+            try {
+                const response = await axios.get('/api/trip?limit=3');
+                setTrips(response.data);
+                console.log('Trips:', response.data);
+                
+            } catch (error) {
+                console.error('Error fetching trips:', error);
+            }
+        };
+
+        fetchTrips();
+    }, []);
+
   return (
     <>
     <Head>
@@ -34,14 +53,29 @@ const TripPage = ({ trip }) => {
      crossorigin="anonymous"></script>
      <meta name="google-adsense-account" content="ca-pub-9744648621612550"></meta>
     </Head>
-    {trip ? <div className='bg-white flex justify-center'>
-      <div className="px-[24px] md:w-[70%] lg:w-[70%] sm:w-[100%] h-full">
-          <div className="py-[16px]">
-            <Hero description={description} destination={destination} trip_duration={trip_duration} destination_image_url={destination_image_url}/>
+    <NavBar/>
+    <div className="w-full bg-white pb-[32px]">
+      <div className="md:w-[80%] lg:w-[80%] sm:w-[100%] mx-auto">
+      {trip ? <div className=''>
+        <div className="h-full ">
+            <div className='w-full'>
+                <img src={destination_image_url} alt="" className='w-full sm:h-[200px] md:h-[400px] lg:h-[400px] object-cover md:rounded-lg lg:rounded-lg' srcset="" />
+            </div>
+            <div className="px-[32px]">
+              <Hero description={description} title={title} destination_image_url={destination_image_url}/>
+              <Itinerary itinerary={itinerary} start_date={start_date} budget_breakdown={budget_breakdown} local_tips={local_tips} />
+            </div>
+        </div>
+      </div> : <Skeleton/>}
+        <div className="py-[32px] px-[36px] bg-[#f5f5f5] rounded-lg mt-[24px]">
+          <h1 className='text-black text-[24px] font-bold'>Other fun trips</h1>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 mt-4">
+            {trips ? trips.map((trip) => (<BlogCard key={trip.id} trip={trip} />)) : <Skeleton/>}
           </div>
-          <Itinerary itinerary={itinerary} start_date={start_date}/>
+        </div>
       </div>
-    </div> : <Skeleton/>}
+    </div>
+    <Footer/>
   </>
   );
 }

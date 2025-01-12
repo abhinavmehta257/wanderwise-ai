@@ -15,7 +15,7 @@ const BlogCard = ({ trip }) => {
     };
 
     return (
-        <div onClick={handleClick} className="relative grid bg-white rounded-lg cursor-pointer">
+        <div onClick={handleClick} className="relative grid rounded-lg cursor-pointer">
             <div className="rounded-md">
                 <img 
                     src={trip.destination_image_url || ''} 
