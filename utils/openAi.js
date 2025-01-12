@@ -98,6 +98,7 @@ export const callAssistant = async (message_text, user_id, assistant_id = "asst_
 
 
 export const getGeneratedTrip = async (user_id, location, numberOfDays) => {
+  await connectDB();
 
   const trip = await TripDetails.findOne({ location, numberOfDays });
 
@@ -112,13 +113,13 @@ export const getGeneratedTrip = async (user_id, location, numberOfDays) => {
     const {title} = data.meta_data;
     const {destination} = data.overview;
     const slug = titleToSlug(title);
-    await connectDB();
+    const destination_image = destination_image_url.length >0 ? destination_image_url : "/traveller.jpeg";
     const newTrip = new TripDetails({
             slug,
             numberOfDays:number_of_days,
             location:destination,
             title,
-            destination_image_url,
+            destination_image_url:destination_image,
             data,
           });
     

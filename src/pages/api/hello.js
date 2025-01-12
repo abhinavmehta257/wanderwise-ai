@@ -2,9 +2,12 @@
 
 import connectDB from "../../../db/db";
 import { callAssistant } from "../../../utils/openAi";
+import Redis from "ioredis";
+const redis = new Redis(process.env.REDIS_URL);
 
 export default async function handler(req, res) {
-    connectDB();
- const msg= await callAssistant("hi","1212121");
- return res.json(msg)
+
+ return res.json({msg:"Hello World"});
 }
+
+

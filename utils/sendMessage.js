@@ -17,6 +17,7 @@ export const sendMessage = async (userId, messageText) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
           messaging_type: "RESPONSE",
+          notification_type:"REGULAR"
         },
       }
     );
@@ -40,6 +41,7 @@ export const sendTyping = async (userId, is_typing) => {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+          notification_type:"REGULAR"
         },
       }
     );
@@ -71,6 +73,7 @@ export const sendQuickReply = async (userId, messageText, quickReplies) => {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+          notification_type:"REGULAR"
         },
       }
     );
@@ -114,6 +117,7 @@ export const sendButtonTemplate = async (
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+          notification_type:"REGULAR"
         },
       }
     );
