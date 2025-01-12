@@ -1,6 +1,6 @@
 import Head from "next/head";
 import NavBar from "./components/ui/NavBar";
-import Footer  from '../components/ui/Footer';
+import Footer  from './components/ui/Footer';
 
 
 
