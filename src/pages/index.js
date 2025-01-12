@@ -6,7 +6,8 @@ import BlogCard from './components/ui/BlogCard';
 import Skeleton from './components/ui/Skeleton';
 import Head from 'next/head';
 import NavBar from './components/ui/NavBar';
-import { Footer } from './components/ui/Footer';
+import Footer  from '../components/ui/Footer';
+
 
 
 const Index = () => {
