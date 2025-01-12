@@ -20,15 +20,15 @@ const Itinerary = ({itinerary, start_date, local_tips, budget_breakdown}) => {
                 </div>
                 <div className='mb-2'>
                     <h3 className="font-semibold">Transportation</h3>
-                    <p className='ml-2'>{local_tips.transportation}</p>
+                    <p className='ml-2'>{local_tips?.transportation}</p>
                 </div>
                 <div className='mb-2'>
                     <h3 className="font-semibold">Currency</h3>
-                    <p className='ml-2'>{local_tips.currency}</p>
+                    <p className='ml-2'>{local_tips?.currency}</p>
                 </div>
                 <div className='mb-2'>
                     <h3 className="font-semibold">Language</h3>
-                    <p className='ml-2'>{local_tips.language}</p>
+                    <p className='ml-2'>{local_tips?.language}</p>
                 </div>
             </div>
             <div className="space-y-2 border-t mt-[28px]">
