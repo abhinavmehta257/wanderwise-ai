@@ -8,29 +8,27 @@ export const createQuickReplies = (items) => {
   }));
 };
 export const replay = async (user_id, text) => {
-  console.log(text);
-
   const data = JSON.parse(text);
   const { prompt, suggestions } = data;
   console.log(data.trip_details.is_finalized);
   
   if ((!suggestions || suggestions.length === 0)&& !data.trip_details.is_finalized) {
-    sendMessage(user_id, prompt);
+    await sendMessage(user_id, prompt);
   } else if (!data.trip_details.is_finalized) {
-    sendQuickReply(user_id, prompt, suggestions);
+    await sendQuickReply(user_id, prompt, suggestions);
   } else if (data.trip_details.is_finalized) {
-    sendMessage(
+    await sendMessage(
       user_id,
       "Plesae wait while we generate your trip details"
     );
     const slug = await getGeneratedTrip(user_id, data.trip_details.destination, data.trip_details.number_of_days);
-    sendButtonTemplate(
+    await sendButtonTemplate(
       user_id,
       `${process.env.NEXT_PUBLIC_BASE_URL}/trip/${slug}`,
       `${process.env.NEXT_PUBLIC_BASE_URL}/trip/${slug}`
     );
   } else {
-    sendMessage(
+    await sendMessage(
       user_id,
       "We have encountered some error. Please try again later"
     );
