@@ -47,7 +47,13 @@ export default async function handler(req, res) {
           console.log(messagingEvents);
           await callAssistant(text, senderId)
             .then((result) => replay(senderId, result))
-            .catch((error) => {sendMessage(senderId,"We have encountered some error. Please try again later")
+            .catch(async (error) => {sendMessage(senderId,);
+              await sendButtonTemplate(
+                    user_id,
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/trip`,
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/trip`,
+                    "We have encountered some error. Please try again later"
+                  );
               console.error(error)});
         }
     }

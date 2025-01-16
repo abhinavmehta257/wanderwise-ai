@@ -25,7 +25,8 @@ export const replay = async (user_id, text) => {
     await sendButtonTemplate(
       user_id,
       `${process.env.NEXT_PUBLIC_BASE_URL}/trip/${slug}`,
-      `${process.env.NEXT_PUBLIC_BASE_URL}/trip/${slug}`
+      `${process.env.NEXT_PUBLIC_BASE_URL}/trip/${slug}`,
+      "View Trip Details"
     );
   } else {
     await sendMessage(

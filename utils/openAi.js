@@ -102,6 +102,8 @@ export const getGeneratedTrip = async (user_id, location, numberOfDays) => {
 
   const trip = await TripDetails.findOne({ location, numberOfDays });
 
+  console.log("trip:", trip);
+
   if (trip) {
     return trip.slug;
   }
@@ -124,6 +126,9 @@ export const getGeneratedTrip = async (user_id, location, numberOfDays) => {
           });
     
     await newTrip.save();
+
+    console.log("newTrip:", newTrip);
+
     return slug;
   }
 };

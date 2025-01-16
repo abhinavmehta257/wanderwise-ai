@@ -86,7 +86,8 @@ export const sendQuickReply = async (userId, messageText, quickReplies) => {
 export const sendButtonTemplate = async (
   userId,
   imageUrl,
-  buttonUrl
+  buttonUrl,
+  text
 ) => {
   let response;
   try {
@@ -99,7 +100,7 @@ export const sendButtonTemplate = async (
             type: "template",
             payload: {
               template_type: "button",
-              text: "Click below to view your trip details",
+              text: text,
               buttons: [
                 {
                   type: "web_url",
