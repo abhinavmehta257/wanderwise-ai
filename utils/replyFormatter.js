@@ -12,26 +12,46 @@ export const replay = async (user_id, text) => {
   const { prompt, suggestions } = data;
   console.log(data.trip_details.is_finalized);
   
-  if ((!suggestions || suggestions.length === 0)&& !data.trip_details.is_finalized) {
-    await sendMessage(user_id, prompt);
-  } else if (!data.trip_details.is_finalized) {
-    await sendQuickReply(user_id, prompt, suggestions);
-  } else if (data.trip_details.is_finalized) {
+  if (data.trip_details.is_finalized) {
+    // First response - acknowledge the request
     await sendMessage(
       user_id,
-      "Plesae wait while we generate your trip details"
+      `Starting to generate your trip details for ${data.trip_details.destination}. You'll receive the link shortly.`
     );
-    const slug = await getGeneratedTrip(user_id, data.trip_details.destination, data.trip_details.number_of_days);
-    await sendButtonTemplate(
-      user_id,
-      `${process.env.NEXT_PUBLIC_BASE_URL}/trip/${slug}`,
-      `${process.env.NEXT_PUBLIC_BASE_URL}/trip/${slug}`,
-      "View Trip Details"
-    );
+
+    // Trigger trip generation in a separate API call
+    try {
+      const response = await fetch('/api/trip/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.API_SECRET_KEY
+        },
+        body: JSON.stringify({
+          user_id,
+          destination: data.trip_details.destination,
+          number_of_days: data.trip_details.number_of_days
+        })
+      });
+
+      // Send initial acknowledgment
+      await sendMessage(
+        user_id,
+        "Your trip is being generated. You'll receive the link as soon as it's ready."
+      );
+
+    } catch (error) {
+      await sendMessage(
+        user_id,
+        "We encountered an error starting trip generation. Please try again later."
+      );
+    }
   } else {
-    await sendMessage(
-      user_id,
-      "We have encountered some error. Please try again later"
-    );
+    // Handle other cases as before
+    if (!suggestions || suggestions.length === 0) {
+      await sendMessage(user_id, prompt);
+    } else {
+      await sendQuickReply(user_id, prompt, suggestions);
+    }
   }
 };
