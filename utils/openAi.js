@@ -4,9 +4,34 @@ const openai = new OpenAI({ apiKey: process.env.OPEN_AI_KEY });
 import Redis from "ioredis";
 import TripDetails from '../model/itinerary';
 import connectDB from "../db/db";
+const { createApi } = require('unsplash-js');
+
 
 // Initialize Redis with your Vercel Redis URL
 const redis = new Redis(process.env.REDIS_URL);
+
+const unsplash = createApi({
+  accessKey: process.env.UNSPLASH_ACCESS_KEY
+});
+
+async function getDestinationImage(destination) {
+  try {
+    const result = await unsplash.search.getPhotos({
+      query: destination,
+      page: 1,
+      perPage: 1,
+      orientation: 'landscape'
+    });
+
+    if (result.response?.results?.length > 0) {
+      return result.response.results[0].urls.regular;
+    }
+    return "/traveller.jpeg"; // Fallback image
+  } catch (error) {
+    console.error('Error fetching destination image:', error);
+    return "/traveller.jpeg"; // Fallback image
+  }
+}
 
 export async function sendLangflowMessage(message, user_id) {
   const url =process.env.LANF_FLOW_URL;
@@ -111,11 +136,11 @@ export const getGeneratedTrip = async (user_id, location, numberOfDays) => {
     const assistant_id = "asst_xNE0S4tbeV82C0u6NGajPlVc";
     const response = await callAssistant("the trip acording to the provided details", user_id, assistant_id);
     const data = JSON.parse(response);
-    const {number_of_days, destination_image_url } = data;
+    const {number_of_days} = data;
     const {title} = data.meta_data;
     const {destination} = data.overview;
     const slug = titleToSlug(title);
-    const destination_image = destination_image_url.length >0 ? destination_image_url : "/traveller.jpeg";
+    const destination_image = await getDestinationImage(destination);
     const newTrip = new TripDetails({
             slug,
             numberOfDays:number_of_days,
