@@ -6,8 +6,13 @@ export default async function handler(req, res) {
   await connectDB();
 
   if (req.method === 'GET') {
-    const limit = parseInt(req.query.limit) || 10;
-    const trips = await TripDetails.find({}).limit(limit).lean();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 9;
+    const skip = (page - 1) * limit;
+    const trips = await TripDetails.find({})
+            .skip(skip)
+            .limit(limit)
+            .lean();
     const tripDetails = trips.map(trip => ({
       slug: trip.slug,
       title: trip.title,

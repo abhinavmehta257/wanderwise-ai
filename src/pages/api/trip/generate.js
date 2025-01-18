@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       "View Trip Details"
     );
   } catch (error) {
-    console.error('Trip generation error:', error);
+    console.log('Trip generation error:', error);
     // Send error message to user
     await sendMessage(
       user_id,

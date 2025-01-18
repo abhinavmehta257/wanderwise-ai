@@ -21,7 +21,7 @@ export const replay = async (user_id, text) => {
 
     // Trigger trip generation in a separate API call
     try {
-      const response = await fetch('/api/trip/generate', {
+      const response = await fetch(`${process.env.API_URL}/api/trip/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,13 +34,8 @@ export const replay = async (user_id, text) => {
         })
       });
 
-      // Send initial acknowledgment
-      await sendMessage(
-        user_id,
-        "Your trip is being generated. You'll receive the link as soon as it's ready."
-      );
-
     } catch (error) {
+      console.log('Trip generation error:', error);
       await sendMessage(
         user_id,
         "We encountered an error starting trip generation. Please try again later."

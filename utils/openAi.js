@@ -14,7 +14,7 @@ const unsplash = createApi({
   accessKey: process.env.UNSPLASH_ACCESS_KEY
 });
 
-async function getDestinationImage(destination) {
+export async function getDestinationImage(destination) {
   try {
     const result = await unsplash.search.getPhotos({
       query: destination,
@@ -32,47 +32,6 @@ async function getDestinationImage(destination) {
     return "/traveller.jpeg"; // Fallback image
   }
 }
-
-export async function sendLangflowMessage(message, user_id) {
-  const url =process.env.LANF_FLOW_URL;
-  const conversation_id = await getConversationId(user_id);
-
-  // Request configuration
-  const config = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.LANG_FLOW_ACCESS_TOKEN}`,
-    },
-    body: JSON.stringify({
-      input_value: message,
-      output_type: "chat",
-      input_type: "chat",
-      session_id: conversation_id,
-      tweaks: {
-        "Agent-mVPOm": {},
-        "ChatInput-n3FUw": {},
-        "ChatOutput-DRnzL": {},
-      },
-    }),
-  };
-
-  try {
-    const response = await fetch(`${url}?stream=false`, config);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.outputs[0].outputs[0].results.message.text;
-  } catch (error) {
-    // return "we have encountered some error, please repeat your answer";
-
-    throw new Error({err:`Error making request: ${error.message}`,message:"we have encountered some error, please repeat your answer"});
-  }
-}
-
 
 
 export const callAssistant = async (message_text, user_id, assistant_id = "asst_MdQvLytr35uEM52fKsRSuhEX") => {

@@ -7,7 +7,7 @@ const Loader = () => {
         loop
         muted
         playsInline
-        className="sm:[50%] lg:w-[20%] aspect-1"
+        className="sm:[50%] lg:w-[200px] aspect-1"
       />
       <p className="text-black">Please wait...</p>
     </div>

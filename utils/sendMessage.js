@@ -123,7 +123,7 @@ export const sendButtonTemplate = async (
       }
     );
   } catch (error) {
-    console.error("Error sending button template:", error);
+    console.log("Error sending button template:", error);
     throw error;
   }
 };
