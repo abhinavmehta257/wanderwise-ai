@@ -56,7 +56,7 @@ const TripPage = ({ trip }) => {
     </Head>
     <NavBar/>
     <div className="w-full bg-white pb-[32px]">
-      <div className="md:w-[80%] lg:w-[80%] sm:w-[100%] mx-auto">
+      <div className="md:w-[50%] lg:w-[50%] sm:w-[100%] mx-auto">
       {trip ? <div className=''>
         <div className="h-full ">
             <div className='w-full'>

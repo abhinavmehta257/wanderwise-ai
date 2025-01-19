@@ -34,14 +34,14 @@ export async function getDestinationImage(destination) {
 }
 
 
-export const callAssistant = async (message_text, user_id, assistant_id = "asst_MdQvLytr35uEM52fKsRSuhEX") => {
-  let thread_id;
+export const callAssistant = async (message_text, user_id, assistant_id = "asst_MdQvLytr35uEM52fKsRSuhEX", _thread_id) => {
+  let thread_id = _thread_id;
 
   try {
     // Check if a thread already exists for this user in Redis
     thread_id = await redis.get(`thread:${user_id}`);
 
-    if (!thread_id) {
+    if (!thread_id && !_thread_id) {
       // Create a new thread if none exists
       const thread = await openai.beta.threads.create();
       console.log("New thread created:", thread);

@@ -16,7 +16,6 @@ export default async function handler(req, res) {
   const { user_id, destination, number_of_days } = req.body;
 
   // Immediately send response to prevent timeout
-  res.status(200).json({ message: 'Trip generation started' });
 
   try {
     // Generate trip asynchronously
@@ -29,6 +28,8 @@ export default async function handler(req, res) {
       `${process.env.NEXT_PUBLIC_BASE_URL}/trip/${slug}`,
       "View Trip Details"
     );
+    return res.status(200).json({ message: 'Trip generated' });
+
   } catch (error) {
     console.log('Trip generation error:', error);
     // Send error message to user

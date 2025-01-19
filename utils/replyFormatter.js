@@ -21,7 +21,7 @@ export const replay = async (user_id, text) => {
 
     // Trigger trip generation in a separate API call
     try {
-      const response = await fetch(`${process.env.API_URL}/api/trip/generate`, {
+      const response = fetch(`${process.env.API_URL}/api/trip/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
