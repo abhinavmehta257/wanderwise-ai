@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Timeline from './ui/TimeLine';
+import BudgetSection from './BudgetSection';
 
 
 const Itinerary = ({itinerary, start_date, local_tips, budget_breakdown}) => {
@@ -31,18 +32,7 @@ const Itinerary = ({itinerary, start_date, local_tips, budget_breakdown}) => {
                     <p className='ml-2'>{local_tips?.language}</p>
                 </div>
             </div>
-            <div className="space-y-2 border-t mt-[28px]">
-                <h1 className='text-[24px] font-bold mt-4'>Budget</h1>
-            {budget_breakdown ? Object.entries(budget_breakdown).map(([key, value], index, array) => (
-              <div key={key}>
-                <div className="flex justify-between">
-                  <span className="capitalize">{key}</span>
-                  <span className="font-semibold">{value}</span>
-                </div>
-                {index < array.length - 1 && <hr className="my-2" />}
-              </div>
-            )) : null}
-          </div>
+            <BudgetSection budgetBreakdown={budget_breakdown} />
         </div>
     );
 };
