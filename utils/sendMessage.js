@@ -3,6 +3,16 @@ import { createQuickReplies } from "./replyFormatter";
 import { getConversationId } from "./insta";
 const PAGE_ACCESS_TOKEN = process.env.OURBABYPICS_ACCESS_TOKEN;
 const url = process.env.META_MESSAGE_URL;
+
+export const getBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, "");
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return "http://localhost:3000";
+};
 export const sendMessage = async (userId, messageText) => {
   let response;
   try {
@@ -83,15 +93,9 @@ export const sendQuickReply = async (userId, messageText, quickReplies) => {
   }
 };
 
-export const sendButtonTemplate = async (
-  userId,
-  imageUrl,
-  buttonUrl,
-  text
-) => {
-  let response;
+export const sendButtonTemplate = async (userId, buttonUrl, text) => {
   try {
-    response = await axios.post(
+    await axios.post(
       url,
       {
         recipient: { id: userId },
@@ -107,7 +111,6 @@ export const sendButtonTemplate = async (
                   url: buttonUrl,
                   title: "Check out now!",
                   webview_height_ratio: "full",
-                  image_url: imageUrl,
                 },
               ],
             },
@@ -118,12 +121,16 @@ export const sendButtonTemplate = async (
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
-          notification_type:"REGULAR"
+          messaging_type: "RESPONSE",
+          notification_type: "REGULAR",
         },
       }
     );
   } catch (error) {
-    console.log("Error sending button template:", error);
+    console.error(
+      "Error sending button template:",
+      error.response?.data?.error || error.message
+    );
     throw error;
   }
 };

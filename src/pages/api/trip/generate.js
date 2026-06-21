@@ -1,7 +1,7 @@
 // src/pages/api/trip/generate.js
 import { validateApiKey } from '../../../middleware/authMiddleware';
 import { getGeneratedTrip } from '../../../../utils/openAi';
-import { sendButtonTemplate, sendMessage } from '../../../../utils/sendMessage';
+import { getBaseUrl, sendButtonTemplate, sendMessage } from '../../../../utils/sendMessage';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -22,12 +22,8 @@ export default async function handler(req, res) {
     const slug = await getGeneratedTrip(user_id, destination, number_of_days);
 
     // Send the trip link to user once generated
-    await sendButtonTemplate(
-      user_id,
-      `${process.env.NEXT_PUBLIC_BASE_URL}/trip/${slug}`,
-      `${process.env.NEXT_PUBLIC_BASE_URL}/trip/${slug}`,
-      "View Trip Details"
-    );
+    const tripUrl = `${getBaseUrl()}/trip/${slug}`;
+    await sendButtonTemplate(user_id, tripUrl, "View Trip Details");
     return res.status(200).json({ message: 'Trip generated' });
 
   } catch (error) {

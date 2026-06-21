@@ -4,7 +4,7 @@ import { getConversationId } from "../../../../utils/insta";
 import { callAssistant, sendLangflowMessage } from "../../../../utils/openAi";
 import { replay } from "../../../../utils/replyFormatter";
 import {
-  sendButtonTemplate,
+  sendMessage,
   sendQuickReply,
   sendTyping,
   sendTypingOn,
@@ -48,13 +48,15 @@ export default async function handler(req, res) {
           await callAssistant(text, senderId)
             .then((result) => replay(senderId, result))
             .catch(async (error) => {
-              await sendButtonTemplate(
-                senderId,
-                `${process.env.NEXT_PUBLIC_BASE_URL}/trip`,
-                `${process.env.NEXT_PUBLIC_BASE_URL}/trip`,
-                "We have encountered some error. Please try again later"
-              );
               console.error(error);
+              try {
+                await sendMessage(
+                  senderId,
+                  "We encountered an error. Please try again later."
+                );
+              } catch (sendError) {
+                console.error("Failed to send error message:", sendError);
+              }
             });
         }
     }
