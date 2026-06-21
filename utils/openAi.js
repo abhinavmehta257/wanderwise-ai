@@ -1,14 +1,10 @@
 import { getConversationId } from "./insta";
 import OpenAI from "openai";
 const openai = new OpenAI({ apiKey: process.env.OPEN_AI_KEY });
-import Redis from "ioredis";
+import redis from "./redis";
 import TripDetails from '../model/itinerary';
 import connectDB from "../db/db";
 const { createApi } = require('unsplash-js');
-
-
-// Initialize Redis with your Vercel Redis URL
-const redis = new Redis(process.env.REDIS_URL);
 
 const unsplash = createApi({
   accessKey: process.env.UNSPLASH_ACCESS_KEY
@@ -48,7 +44,7 @@ export const callAssistant = async (message_text, user_id, assistant_id = "asst_
       thread_id = thread.id;
 
       // Save the thread ID in Redis
-      const redis_thread_set = await redis.set(`thread:${user_id}`, thread_id, "EX", 86400);
+      const redis_thread_set = await redis.set(`thread:${user_id}`, thread_id, { ex: 86400 });
       console.log("Redis thread set:", redis_thread_set);
       
     }
