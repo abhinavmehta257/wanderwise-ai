@@ -31,22 +31,30 @@ export async function getDestinationImage(destination) {
 
 
 export const callAssistant = async (message_text, user_id, assistant_id = "asst_MdQvLytr35uEM52fKsRSuhEX", _thread_id) => {
-  let thread_id = _thread_id;
-
   try {
-    // Check if a thread already exists for this user in Redis
-    thread_id = await redis.get(`thread:${user_id}`);
+    let thread_id = _thread_id;
 
-    if (!thread_id && !_thread_id) {
-      // Create a new thread if none exists
+    if (!thread_id) {
+      thread_id = await redis.get(`thread:${user_id}`);
+    }
+
+    if (thread_id) {
+      try {
+        await openai.beta.threads.retrieve(thread_id);
+      } catch (error) {
+        console.warn("Stale thread ID, removing from Redis:", thread_id, error.message);
+        await redis.del(`thread:${user_id}`);
+        thread_id = null;
+      }
+    }
+
+    if (!thread_id) {
       const thread = await openai.beta.threads.create();
       console.log("New thread created:", thread);
       thread_id = thread.id;
 
-      // Save the thread ID in Redis
       const redis_thread_set = await redis.set(`thread:${user_id}`, thread_id, { ex: 86400 });
       console.log("Redis thread set:", redis_thread_set);
-      
     }
 
     // Add the user's message to the thread
