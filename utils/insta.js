@@ -1,5 +1,6 @@
 export const getConversationId = async (user_id) => {
-  const url = `https://graph.facebook.com/v17.0/me/conversations?platform=instagram&user_id=${user_id}`;
+  const apiVersion = process.env.META_GRAPH_API_VERSION || "v21.0";
+  const url = `https://graph.facebook.com/${apiVersion}/me/conversations?platform=instagram&user_id=${user_id}`;
 
   const config = {
     method: "GET",

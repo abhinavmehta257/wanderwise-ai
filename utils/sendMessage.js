@@ -1,8 +1,21 @@
 import axios from "axios";
 import { createQuickReplies } from "./replyFormatter";
-import { getConversationId } from "./insta";
+
 const PAGE_ACCESS_TOKEN = process.env.OURBABYPICS_ACCESS_TOKEN;
-const url = process.env.META_MESSAGE_URL;
+const GRAPH_API_VERSION = process.env.META_GRAPH_API_VERSION || "v21.0";
+const MESSAGE_URL =
+  process.env.META_MESSAGE_URL ||
+  `https://graph.facebook.com/${GRAPH_API_VERSION}/me/messages`;
+
+const metaHeaders = {
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+};
+
+function logMetaError(action, error) {
+  const metaError = error.response?.data?.error;
+  console.error(`Error ${action}:`, metaError || error.message);
+}
 
 export const getBaseUrl = () => {
   if (process.env.NEXT_PUBLIC_BASE_URL) {
@@ -13,63 +26,49 @@ export const getBaseUrl = () => {
   }
   return "http://localhost:3000";
 };
+
 export const sendMessage = async (userId, messageText) => {
-  let response;
   try {
-    response = await axios.post(
-      url,
+    await axios.post(
+      MESSAGE_URL,
       {
         recipient: { id: userId },
+        messaging_type: "RESPONSE",
         message: { text: messageText },
       },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
-          messaging_type: "RESPONSE",
-          notification_type:"REGULAR"
-        },
-      }
+      { headers: metaHeaders }
     );
   } catch (error) {
-    console.error("Error sending message:", error);
+    logMetaError("sending message", error);
     throw error;
   }
 };
-export const sendTyping = async (userId, is_typing) => {
-  let response;
-  console.log(userId);
 
+export const sendTyping = async (userId, is_typing) => {
   try {
-    response = await axios.post(
-      url,
+    await axios.post(
+      MESSAGE_URL,
       {
         recipient: { id: userId },
         sender_action: is_typing ? "typing_on" : "typing_off",
       },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
-          notification_type:"REGULAR"
-        },
-      }
+      { headers: metaHeaders }
     );
   } catch (error) {
-    console.error("Error sending typing action:", error);
+    logMetaError("sending typing action", error);
     throw error;
   }
 };
 
 export const sendQuickReply = async (userId, messageText, quickReplies) => {
   const _quickReplies = createQuickReplies(quickReplies);
-  let response;
+
   try {
-    response = await axios.post(
-      url,
+    await axios.post(
+      MESSAGE_URL,
       {
         recipient: { id: userId },
-        session_id: userId,
+        messaging_type: "RESPONSE",
         message: {
           text: messageText,
           quick_replies: _quickReplies.map((reply) => ({
@@ -79,16 +78,26 @@ export const sendQuickReply = async (userId, messageText, quickReplies) => {
           })),
         },
       },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
-          notification_type:"REGULAR"
-        },
-      }
+      { headers: metaHeaders }
     );
   } catch (error) {
-    console.error("Error sending quick reply:", error);
+    logMetaError("sending quick reply", error);
+    throw error;
+  }
+};
+
+export const sendPrivateReplyToComment = async (commentId, messageText) => {
+  try {
+    await axios.post(
+      MESSAGE_URL,
+      {
+        recipient: { comment_id: commentId },
+        message: { text: messageText },
+      },
+      { headers: metaHeaders }
+    );
+  } catch (error) {
+    logMetaError("sending private reply to comment", error);
     throw error;
   }
 };
@@ -96,9 +105,10 @@ export const sendQuickReply = async (userId, messageText, quickReplies) => {
 export const sendButtonTemplate = async (userId, buttonUrl, text) => {
   try {
     await axios.post(
-      url,
+      MESSAGE_URL,
       {
         recipient: { id: userId },
+        messaging_type: "RESPONSE",
         message: {
           attachment: {
             type: "template",
@@ -117,20 +127,10 @@ export const sendButtonTemplate = async (userId, buttonUrl, text) => {
           },
         },
       },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
-          messaging_type: "RESPONSE",
-          notification_type: "REGULAR",
-        },
-      }
+      { headers: metaHeaders }
     );
   } catch (error) {
-    console.error(
-      "Error sending button template:",
-      error.response?.data?.error || error.message
-    );
+    logMetaError("sending button template", error);
     throw error;
   }
 };

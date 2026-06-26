@@ -5,9 +5,7 @@ import { callAssistant, sendLangflowMessage } from "../../../../utils/openAi";
 import { replay } from "../../../../utils/replyFormatter";
 import {
   sendMessage,
-  sendQuickReply,
-  sendTyping,
-  sendTypingOn,
+  sendPrivateReplyToComment,
 } from "../../../../utils/sendMessage";
 
 export default async function handler(req, res) {
@@ -31,10 +29,14 @@ export default async function handler(req, res) {
   // Handle POST request (incoming messages)
   if (req.method === "POST") {
     
-    if( req.body.entry[0].changes){
-      if( req.body.entry[0].changes[0].field=="comments"){
-        const sender_id = req.body.entry[0].changes[0].value.from.id;
-        await sendQuickReply(sender_id,"Thanks for commenting! would you like to start planning tirp 🧳🏖",['Yes, start planning']);
+    if (req.body.entry[0].changes) {
+      const change = req.body.entry[0].changes[0];
+      if (change.field === "comments") {
+        const commentId = change.value.id;
+        await sendPrivateReplyToComment(
+          commentId,
+          "Thanks for commenting! Would you like to start planning a trip? Reply here to get started 🧳🏖"
+        );
       }
     }
     

@@ -2,13 +2,25 @@ import { callAssistant, getGeneratedTrip } from "./openAi";
 import { sendButtonTemplate, sendMessage, sendQuickReply } from "./sendMessage";
 
 export const createQuickReplies = (items) => {
-  return items.map((item) => ({
-    title: item,
-    payload: `LOCATION_${item.toUpperCase().replace(/\s+/g, "_")}`,
-  }));
+  return items.map((item) => {
+    const title = item.slice(0, 20);
+    const payload = `LOCATION_${item
+      .toUpperCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^A-Z0-9_]/g, "")}`;
+
+    return { title, payload };
+  });
 };
 export const replay = async (user_id, text) => {
-  const data = JSON.parse(text);
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    await sendMessage(user_id, text);
+    return;
+  }
+
   const { prompt, suggestions } = data;
   console.log(data.trip_details.is_finalized);
   
