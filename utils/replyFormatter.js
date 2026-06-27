@@ -1,5 +1,10 @@
 import { callAssistant, getGeneratedTrip } from "./openAi";
-import { sendButtonTemplate, sendMessage, sendQuickReply } from "./sendMessage";
+import {
+  getBaseUrl,
+  sendButtonTemplate,
+  sendMessage,
+  sendQuickReply,
+} from "./sendMessage";
 
 export const createQuickReplies = (items) => {
   return items.map((item) => {
@@ -33,19 +38,22 @@ export const replay = async (user_id, text) => {
 
     // Trigger trip generation in a separate API call
     try {
-      const response = fetch(`${process.env.API_URL}/api/trip/generate`, {
-        method: 'POST',
+      const response = await fetch(`${getBaseUrl()}/api/trip/generate`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': process.env.API_SECRET_KEY
+          "Content-Type": "application/json",
+          "x-api-key": process.env.API_SECRET_KEY,
         },
         body: JSON.stringify({
           user_id,
           destination: data.trip_details.destination,
-          number_of_days: data.trip_details.number_of_days
-        })
+          number_of_days: data.trip_details.number_of_days,
+        }),
       });
 
+      if (!response.ok) {
+        throw new Error(`Trip generate failed: ${response.status}`);
+      }
     } catch (error) {
       console.log('Trip generation error:', error);
       await sendMessage(
