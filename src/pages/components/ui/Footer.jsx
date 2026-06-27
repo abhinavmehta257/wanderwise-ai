@@ -27,6 +27,15 @@ const Footer = () => {
                         <li class="mb-4">
                             <a href="/policies" class="hover:underline">Privacy Policy</a>
                         </li>
+                        <li class="mb-4">
+                            <a href="/terms" class="hover:underline">Terms of Use</a>
+                        </li>
+                        <li class="mb-4">
+                            <a href="/cookies" class="hover:underline">Cookie Policy</a>
+                        </li>
+                        <li class="mb-4">
+                            <a href="/data-storage" class="hover:underline">Data Storage &amp; Use</a>
+                        </li>
                     </ul>
                 </div>
             </div>
