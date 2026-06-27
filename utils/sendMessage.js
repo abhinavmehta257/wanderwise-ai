@@ -102,7 +102,12 @@ export const sendPrivateReplyToComment = async (commentId, messageText) => {
   }
 };
 
-export const sendButtonTemplate = async (userId, buttonUrl, text) => {
+export const sendButtonTemplate = async (
+  userId,
+  buttonUrl,
+  text,
+  buttonTitle = "Check out now!"
+) => {
   try {
     await axios.post(
       MESSAGE_URL,
@@ -119,7 +124,7 @@ export const sendButtonTemplate = async (userId, buttonUrl, text) => {
                 {
                   type: "web_url",
                   url: buttonUrl,
-                  title: "Check out now!",
+                  title: buttonTitle,
                   webview_height_ratio: "full",
                 },
               ],
@@ -131,6 +136,30 @@ export const sendButtonTemplate = async (userId, buttonUrl, text) => {
     );
   } catch (error) {
     logMetaError("sending button template", error);
+    throw error;
+  }
+};
+
+export const sendActionQuickReply = async (userId, messageText, actions) => {
+  try {
+    await axios.post(
+      MESSAGE_URL,
+      {
+        recipient: { id: userId },
+        messaging_type: "RESPONSE",
+        message: {
+          text: messageText,
+          quick_replies: actions.map((action) => ({
+            content_type: "text",
+            title: action.title.slice(0, 20),
+            payload: action.payload,
+          })),
+        },
+      },
+      { headers: metaHeaders }
+    );
+  } catch (error) {
+    logMetaError("sending action quick reply", error);
     throw error;
   }
 };

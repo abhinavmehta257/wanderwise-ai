@@ -1,9 +1,9 @@
-import { getConversationId } from "./insta";
 import OpenAI from "openai";
 const openai = new OpenAI({ apiKey: process.env.OPEN_AI_KEY });
 import redis from "./redis";
 import TripDetails from '../model/itinerary';
 import connectDB from "../db/db";
+import { buildLocationQuery, normalizeLocation } from "./location";
 const { createApi } = require('unsplash-js');
 
 const unsplash = createApi({
@@ -159,40 +159,112 @@ export const callAssistant = async (message_text, user_id, assistant_id = "asst_
 };
 
 
-export const getGeneratedTrip = async (user_id, location, numberOfDays) => {
+export async function findExistingTrip(location, numberOfDays) {
+  await connectDB();
+  return TripDetails.findOne({
+    ...buildLocationQuery(location),
+    numberOfDays,
+  });
+}
+
+function buildTripPrompt({
+  location,
+  numberOfDays,
+  datePreference,
+  startDate,
+  endDate,
+}) {
+  let dateContext = "Dates are flexible — suggest a general best time to visit.";
+
+  if (datePreference === "specific" && startDate) {
+    dateContext = endDate
+      ? `Travel dates: ${startDate} to ${endDate}.`
+      : `Travel start date: ${startDate}.`;
+  }
+
+  return `Generate a complete ${numberOfDays}-day trip itinerary for ${location}. ${dateContext} Return the response as JSON only.`;
+}
+
+export async function createTrip(user_id, options) {
+  const {
+    location,
+    numberOfDays,
+    datePreference = "flexible",
+    startDate,
+    endDate,
+    creator,
+    force = false,
+  } = options;
+
   await connectDB();
 
-  const trip = await TripDetails.findOne({ location, numberOfDays });
-
-  console.log("trip:", trip);
-
-  if (trip) {
-    return trip.slug;
+  if (!force) {
+    const existing = await findExistingTrip(location, numberOfDays);
+    if (existing) {
+      return {
+        slug: existing.slug,
+        isExisting: true,
+        creator: existing.creator || null,
+      };
+    }
   }
-  else {   
-    const assistant_id = "asst_xNE0S4tbeV82C0u6NGajPlVc";
-    const response = await callAssistant("the trip acording to the provided details", user_id, assistant_id);
-    const data = JSON.parse(response);
-    const {number_of_days} = data;
-    const {title} = data.meta_data;
-    const {destination} = data.overview;
-    const slug = titleToSlug(title);
-    const destination_image = await getDestinationImage(destination);
-    const newTrip = new TripDetails({
-            slug,
-            numberOfDays:number_of_days,
-            location:destination,
-            title,
-            destination_image_url:destination_image,
-            data,
-          });
-    
-    await newTrip.save();
 
-    console.log("newTrip:", newTrip);
+  const assistant_id = "asst_xNE0S4tbeV82C0u6NGajPlVc";
+  const prompt = buildTripPrompt({
+    location,
+    numberOfDays,
+    datePreference,
+    startDate,
+    endDate,
+  });
 
-    return slug;
-  }
+  const response = await callAssistant(
+    prompt,
+    `${user_id}:trip-gen`,
+    assistant_id
+  );
+  const data = JSON.parse(response);
+  const { number_of_days } = data;
+  const { title } = data.meta_data;
+  const { destination } = data.overview;
+  const slug = titleToSlug(title);
+  const destination_image = await getDestinationImage(destination);
+
+  const newTrip = new TripDetails({
+    slug,
+    numberOfDays: number_of_days,
+    location: normalizeLocation(destination),
+    title,
+    destination_image_url: destination_image,
+    data,
+    creator: creator || undefined,
+    datePreference,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+  });
+
+  await newTrip.save();
+
+  return {
+    slug: newTrip.slug,
+    isExisting: false,
+    creator: newTrip.creator || null,
+  };
+}
+
+export const getGeneratedTrip = async (
+  user_id,
+  location,
+  numberOfDays,
+  options = {}
+) => {
+  const result = await createTrip(user_id, {
+    location,
+    numberOfDays,
+    ...options,
+  });
+
+  return result.slug;
 };
 
 function titleToSlug(title) {

@@ -1,73 +1,64 @@
-// import { sendMessage } from "@/utils/sendMessage";
-
-import { getConversationId } from "../../../../utils/insta";
-import { callAssistant, sendLangflowMessage } from "../../../../utils/openAi";
-import { replay } from "../../../../utils/replyFormatter";
+import { handleInstagramMessage } from "../../../../utils/instagramFlow";
 import {
   sendMessage,
   sendPrivateReplyToComment,
 } from "../../../../utils/sendMessage";
 
 export default async function handler(req, res) {
-  // Handle GET request (verification)
   if (req.method === "GET") {
     const VERIFY_TOKEN = process.env.INSTA_VERIFICATION_STRING;
-    console.log(VERIFY_TOKEN);
-
     const mode = req.query["hub.mode"];
     const token = req.query["hub.verify_token"];
     const challenge = req.query["hub.challenge"];
-    console.log(mode);
 
     if (mode && token === VERIFY_TOKEN) {
       return res.status(200).send(challenge);
-    } else {
-      return res.status(403).end();
     }
+
+    return res.status(403).end();
   }
 
-  // Handle POST request (incoming messages)
   if (req.method === "POST") {
-    
-    if (req.body.entry[0].changes) {
+    if (req.body.entry?.[0]?.changes) {
       const change = req.body.entry[0].changes[0];
       if (change.field === "comments") {
         const commentId = change.value.id;
         await sendPrivateReplyToComment(
           commentId,
-          "Thanks for commenting! Would you like to start planning a trip? Reply here to get started 🧳🏖"
+          "Thanks for commenting! Send us a message here to plan a trip or browse existing ones."
         );
       }
     }
-    
-    if (req.body.entry[0].messaging) {
+
+    if (req.body.entry?.[0]?.messaging) {
       const messagingEvents = req.body.entry[0].messaging[0];
-      // Check if the event is a message and not an echo
-        if (messagingEvents.message && messagingEvents.message.text && !messagingEvents.message.is_echo) {
-          const text = messagingEvents.message.text;
-          const senderId = messagingEvents.sender.id;
-          console.log(messagingEvents);
-          await callAssistant(text, senderId)
-            .then((result) => replay(senderId, result))
-            .catch(async (error) => {
-              console.error(error);
-              try {
-                await sendMessage(
-                  senderId,
-                  "We encountered an error. Please try again later."
-                );
-              } catch (sendError) {
-                console.error("Failed to send error message:", sendError);
-              }
-            });
+      const message = messagingEvents.message;
+
+      if (message && !message.is_echo) {
+        const senderId = messagingEvents.sender.id;
+        const text = message.text || "";
+        const payload = message.quick_reply?.payload;
+
+        if (text || payload) {
+          try {
+            await handleInstagramMessage(senderId, text, payload);
+          } catch (error) {
+            console.error("Instagram flow error:", error);
+            try {
+              await sendMessage(
+                senderId,
+                "We encountered an error. Please try again later."
+              );
+            } catch (sendError) {
+              console.error("Failed to send error message:", sendError);
+            }
+          }
         }
+      }
     }
 
     return res.status(200).send("EVENT_RECEIVED");
-  } else if (req.body.entry[0].changes) {
-    console.log(req.body.entry[0].changes[0]);
   }
 
-  // Return 405 Method Not Allowed for other methods
   return res.status(405).end();
 }

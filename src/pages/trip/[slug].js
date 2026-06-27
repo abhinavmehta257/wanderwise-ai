@@ -52,6 +52,7 @@ const TripPage = ({ trip, relatedTrips = [] }) => {
                   description={description}
                   title={title}
                   destination_image_url={destination_image_url}
+                  creator={trip.creator}
                 />
                 <Itinerary
                   itinerary={itinerary}
