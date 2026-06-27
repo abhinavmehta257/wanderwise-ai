@@ -1,7 +1,6 @@
 import connectDB from '../../../../db/db';
 import TripDetails from '../../../../model/itinerary';
 import redis from '../../../../utils/redis';
-import { verifyFormToken } from '../../../../utils/token';
 import { normalizeLocation, buildLocationQuery } from '../../../../utils/location';
 import { getBaseUrl } from '../../../../utils/sendMessage';
 
@@ -63,20 +62,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const tokenData = verifyFormToken(req.body.token);
-  if (!tokenData) {
-    return res.status(401).json({
-      success: false,
-      error: 'Invalid or expired link. Please message us on Instagram again.',
-    });
-  }
-
   const validated = validateSubmission(req.body);
   if (validated.error) {
     return res.status(400).json({ success: false, error: validated.error });
   }
 
-  const instagramUserId = tokenData.instagramUserId;
+  const instagramUserId =
+    req.body.instagramUserId?.trim() ||
+    `web:${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   const {
     destination,
     numberOfDays,

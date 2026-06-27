@@ -95,9 +95,10 @@ function LocationAutocomplete({ value, onChange, onSelect }) {
   );
 }
 
-export default function GeneratePage({ tokenValid, tokenError }) {
+export default function GeneratePage() {
   const router = useRouter();
-  const token = router.query.token;
+  const instagramUserId =
+    typeof router.query.uid === 'string' ? router.query.uid : undefined;
 
   const [destination, setDestination] = useState('');
   const [flexibleDates, setFlexibleDates] = useState(true);
@@ -142,7 +143,7 @@ export default function GeneratePage({ tokenValid, tokenError }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          token,
+          instagramUserId,
           destination,
           numberOfDays,
           flexibleDates,
@@ -167,25 +168,6 @@ export default function GeneratePage({ tokenValid, tokenError }) {
     }
   };
 
-  if (!tokenValid) {
-    return (
-      <>
-        <Head>
-          <title>Plan a Trip | Wanderwise</title>
-        </Head>
-        <NavBar />
-        <div className="mx-auto min-h-[60vh] max-w-lg px-6 py-12 text-center">
-          <h1 className="text-2xl font-bold text-[#181F23]">Link expired</h1>
-          <p className="mt-4 text-[#8C9094]">
-            {tokenError ||
-              'This link is invalid or has expired. Message @wander_wise_ai on Instagram to get a new one.'}
-          </p>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
   if (isSuccess) {
     return (
       <>
@@ -202,8 +184,9 @@ export default function GeneratePage({ tokenValid, tokenError }) {
               We&apos;re generating your trip!
             </h1>
             <p className="mt-4 text-[#4B5563]">
-              Hang tight — we&apos;ll send the link to your Instagram DMs once
-              it&apos;s ready.
+              {instagramUserId
+                ? "Hang tight — we'll send the link to your Instagram DMs once it's ready."
+                : 'Hang tight — your itinerary is being created. Check back on wanderwise.ai shortly.'}
             </p>
           </div>
         </div>
@@ -382,39 +365,4 @@ export default function GeneratePage({ tokenValid, tokenError }) {
       <Footer />
     </>
   );
-}
-
-export async function getServerSideProps({ query }) {
-  const { verifyFormToken } = await import('../../../utils/token');
-  const token = query.token;
-
-  if (!token) {
-    return {
-      props: {
-        tokenValid: false,
-        tokenError:
-          'No access token found. Message @wander_wise_ai on Instagram to get started.',
-      },
-    };
-  }
-
-  try {
-    const tokenData = verifyFormToken(token);
-    return {
-      props: {
-        tokenValid: Boolean(tokenData),
-        tokenError: tokenData
-          ? null
-          : 'This link is invalid or has expired. Message @wander_wise_ai on Instagram to get a new one.',
-      },
-    };
-  } catch {
-    return {
-      props: {
-        tokenValid: false,
-        tokenError:
-          'Something went wrong validating your link. Please try again from Instagram.',
-      },
-    };
-  }
 }

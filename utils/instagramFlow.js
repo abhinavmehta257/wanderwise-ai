@@ -1,5 +1,4 @@
 import redis from "./redis";
-import { MissingApiSecretError, signFormToken } from "./token";
 import {
   getBaseUrl,
   sendButtonTemplate,
@@ -42,27 +41,14 @@ async function sendWelcomeMenu(userId) {
 }
 
 async function sendGenerateFormLink(userId) {
-  try {
-    const token = signFormToken(userId);
-    const formUrl = `${getBaseUrl()}/generate?token=${encodeURIComponent(token)}`;
+  const formUrl = `${getBaseUrl()}/generate?uid=${encodeURIComponent(userId)}`;
 
-    await sendButtonTemplate(
-      userId,
-      formUrl,
-      "Fill out this quick form and we'll plan your trip. It only takes a minute!",
-      "Plan my trip"
-    );
-  } catch (error) {
-    if (error instanceof MissingApiSecretError) {
-      console.error("[instagram-flow:v2] API_SECRET_KEY is not configured");
-      await sendMessage(
-        userId,
-        "Trip planning is temporarily unavailable. Please try again later."
-      );
-      return;
-    }
-    throw error;
-  }
+  await sendButtonTemplate(
+    userId,
+    formUrl,
+    "Fill out this quick form and we'll plan your trip. It only takes a minute!",
+    "Plan my trip"
+  );
 }
 
 async function sendBrowseLink(userId) {
