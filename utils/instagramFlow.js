@@ -1,10 +1,10 @@
 import redis from "./redis";
-import { signFormToken } from "./token";
+import { MissingApiSecretError, signFormToken } from "./token";
 import {
   getBaseUrl,
-  sendActionQuickReply,
   sendButtonTemplate,
   sendMessage,
+  sendQuickReply,
 } from "./sendMessage";
 
 const ACTIONS = {
@@ -27,22 +27,42 @@ const WELCOME_TEXT =
   "Welcome to Wanderwise! What would you like to do today?";
 
 async function sendWelcomeMenu(userId) {
-  await sendActionQuickReply(userId, WELCOME_TEXT, [
-    { title: "Generate a Trip", payload: ACTIONS.GENERATE_TRIP },
-    { title: "Browse Trips", payload: ACTIONS.BROWSE_TRIPS },
-  ]);
+  try {
+    await sendQuickReply(userId, WELCOME_TEXT, [
+      "Generate a Trip",
+      "Browse Trips",
+    ]);
+  } catch (error) {
+    console.error("[instagram-flow:v2] quick reply failed, falling back to plain text:", error);
+    await sendMessage(
+      userId,
+      `${WELCOME_TEXT}\n\nReply "Generate" to plan a trip or "Browse" to see existing trips.`
+    );
+  }
 }
 
 async function sendGenerateFormLink(userId) {
-  const token = signFormToken(userId);
-  const formUrl = `${getBaseUrl()}/generate?token=${encodeURIComponent(token)}`;
+  try {
+    const token = signFormToken(userId);
+    const formUrl = `${getBaseUrl()}/generate?token=${encodeURIComponent(token)}`;
 
-  await sendButtonTemplate(
-    userId,
-    formUrl,
-    "Fill out this quick form and we'll plan your trip. It only takes a minute!",
-    "Plan my trip"
-  );
+    await sendButtonTemplate(
+      userId,
+      formUrl,
+      "Fill out this quick form and we'll plan your trip. It only takes a minute!",
+      "Plan my trip"
+    );
+  } catch (error) {
+    if (error instanceof MissingApiSecretError) {
+      console.error("[instagram-flow:v2] API_SECRET_KEY is not configured");
+      await sendMessage(
+        userId,
+        "Trip planning is temporarily unavailable. Please try again later."
+      );
+      return;
+    }
+    throw error;
+  }
 }
 
 async function sendBrowseLink(userId) {
@@ -96,7 +116,7 @@ async function handleGenerateOwn(userId) {
     user_id: userId,
     force: true,
   }).catch(async (error) => {
-    console.error("Force generate error:", error);
+    console.error("[instagram-flow:v2] force generate error:", error);
     await sendMessage(
       userId,
       "We encountered an error generating your trip. Please try again later."
@@ -133,7 +153,14 @@ function resolveAction(text, payload) {
 }
 
 export async function handleInstagramMessage(userId, text, payload) {
-  const action = resolveAction(text, payload);
+  const action = resolveAction(text, payload) || "welcome";
+
+  console.log("[instagram-flow:v2] incoming DM", {
+    userId,
+    text,
+    payload,
+    action,
+  });
 
   switch (action) {
     case ACTIONS.GENERATE_TRIP:

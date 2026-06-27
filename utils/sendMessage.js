@@ -12,9 +12,16 @@ const metaHeaders = {
   Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
 };
 
-function logMetaError(action, error) {
+function logMetaSend(type, recipient, extra = {}) {
+  console.log("[meta-send]", { type, recipient, ...extra });
+}
+
+function logMetaError(action, error, context = {}) {
   const metaError = error.response?.data?.error;
-  console.error(`Error ${action}:`, metaError || error.message);
+  console.error(`[meta-send] error ${action}:`, {
+    ...context,
+    metaError: metaError || error.message,
+  });
 }
 
 export const getBaseUrl = () => {
@@ -28,6 +35,7 @@ export const getBaseUrl = () => {
 };
 
 export const sendMessage = async (userId, messageText) => {
+  logMetaSend("text", userId);
   try {
     await axios.post(
       MESSAGE_URL,
@@ -39,7 +47,7 @@ export const sendMessage = async (userId, messageText) => {
       { headers: metaHeaders }
     );
   } catch (error) {
-    logMetaError("sending message", error);
+    logMetaError("sending message", error, { userId });
     throw error;
   }
 };
@@ -55,13 +63,14 @@ export const sendTyping = async (userId, is_typing) => {
       { headers: metaHeaders }
     );
   } catch (error) {
-    logMetaError("sending typing action", error);
+    logMetaError("sending typing action", error, { userId });
     throw error;
   }
 };
 
 export const sendQuickReply = async (userId, messageText, quickReplies) => {
   const _quickReplies = createQuickReplies(quickReplies);
+  logMetaSend("quick_reply", userId, { options: quickReplies.length });
 
   try {
     await axios.post(
@@ -81,12 +90,13 @@ export const sendQuickReply = async (userId, messageText, quickReplies) => {
       { headers: metaHeaders }
     );
   } catch (error) {
-    logMetaError("sending quick reply", error);
+    logMetaError("sending quick reply", error, { userId });
     throw error;
   }
 };
 
 export const sendPrivateReplyToComment = async (commentId, messageText) => {
+  logMetaSend("comment_reply", commentId);
   try {
     await axios.post(
       MESSAGE_URL,
@@ -97,7 +107,7 @@ export const sendPrivateReplyToComment = async (commentId, messageText) => {
       { headers: metaHeaders }
     );
   } catch (error) {
-    logMetaError("sending private reply to comment", error);
+    logMetaError("sending private reply to comment", error, { commentId });
     throw error;
   }
 };
@@ -108,6 +118,7 @@ export const sendButtonTemplate = async (
   text,
   buttonTitle = "Check out now!"
 ) => {
+  logMetaSend("button", userId, { buttonUrl, buttonTitle });
   try {
     await axios.post(
       MESSAGE_URL,
@@ -135,12 +146,13 @@ export const sendButtonTemplate = async (
       { headers: metaHeaders }
     );
   } catch (error) {
-    logMetaError("sending button template", error);
+    logMetaError("sending button template", error, { userId, buttonUrl });
     throw error;
   }
 };
 
 export const sendActionQuickReply = async (userId, messageText, actions) => {
+  logMetaSend("action_quick_reply", userId, { options: actions.length });
   try {
     await axios.post(
       MESSAGE_URL,
@@ -159,7 +171,7 @@ export const sendActionQuickReply = async (userId, messageText, actions) => {
       { headers: metaHeaders }
     );
   } catch (error) {
-    logMetaError("sending action quick reply", error);
+    logMetaError("sending action quick reply", error, { userId });
     throw error;
   }
 };

@@ -40,6 +40,11 @@ export default async function handler(req, res) {
         const payload = message.quick_reply?.payload;
 
         if (text || payload) {
+          console.log("[instagram-flow:v2] webhook received message", {
+            senderId,
+            text,
+            payload,
+          });
           try {
             await handleInstagramMessage(senderId, text, payload);
           } catch (error) {

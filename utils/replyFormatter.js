@@ -1,3 +1,5 @@
+// Legacy Instagram reply router — no longer used by the webhook.
+// Kept for reference; Instagram DMs now use utils/instagramFlow.js.
 import { callAssistant, getGeneratedTrip } from "./openAi";
 import {
   getBaseUrl,
