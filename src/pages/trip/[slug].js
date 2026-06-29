@@ -5,6 +5,7 @@ import Skeleton from '../components/ui/Skeleton';
 import NavBar from '../components/ui/NavBar';
 import BlogCard from '../components/ui/BlogCard';
 import Footer from '../components/ui/Footer';
+import GenerateTripFab from '../components/ui/GenerateTripFab';
 
 const TripPage = ({ trip, relatedTrips = [] }) => {
   if (!trip) {
@@ -78,6 +79,7 @@ const TripPage = ({ trip, relatedTrips = [] }) => {
         </div>
       </div>
       <Footer />
+      <GenerateTripFab />
     </>
   );
 };

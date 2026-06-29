@@ -2,6 +2,8 @@ import Head from 'next/head';
 import NavBar from './components/ui/NavBar';
 import Footer from './components/ui/Footer';
 import TripList from './components/TripList';
+import TripSearchBar from './components/ui/TripSearchBar';
+import GenerateTripFab from './components/ui/GenerateTripFab';
 
 const LIMIT = 9;
 
@@ -24,6 +26,9 @@ const Index = ({ initialTrips = [], initialHasMore = false }) => {
             <h1 className="text-[#333333] text-3xl font-bold">All Trips</h1>
             <p className="text-[#333333]">See all the trips we have planned.</p>
           </div>
+          <div className="mt-6 max-w-xl mx-auto">
+            <TripSearchBar />
+          </div>
           <TripList
             initialTrips={initialTrips}
             initialHasMore={initialHasMore}
@@ -32,6 +37,7 @@ const Index = ({ initialTrips = [], initialHasMore = false }) => {
         </div>
       </div>
       <Footer />
+      <GenerateTripFab />
     </div>
   );
 };
