@@ -2,19 +2,31 @@ import connectDB from '../../../../db/db';
 import TripDetails from '../../../../model/itinerary';
 import redis from '../../../../utils/redis';
 import { normalizeLocation, buildLocationQuery } from '../../../../utils/location';
-import { getBaseUrl } from '../../../../utils/sendMessage';
+import { resolveTravelPlace } from '../../../../utils/placeSearch';
+import { processTripGeneration } from '../../../../utils/processTripGeneration';
+import { initTripJob } from '../../../../utils/tripJobStatus';
+
+const BUDGET_TIERS = ["budget", "mid-range", "luxury"];
 
 function sanitizeHandle(handle) {
   if (!handle) return '';
   return handle.replace(/^@+/, '').trim();
 }
 
-function validateSubmission(body) {
-  const destination = body.destination?.trim();
+async function validateSubmission(body) {
+  const destinationInput = body.destination?.trim();
   const numberOfDays = parseInt(body.numberOfDays, 10);
 
-  if (!destination) {
+  if (!destinationInput) {
     return { error: 'Destination is required' };
+  }
+
+  const resolvedPlace = await resolveTravelPlace(destinationInput);
+  if (!resolvedPlace) {
+    return {
+      error:
+        'Please choose a city or travel destination (e.g. Manali, Mumbai) — not a street address.',
+    };
   }
 
   if (!numberOfDays || numberOfDays < 1 || numberOfDays > 30) {
@@ -29,12 +41,40 @@ function validateSubmission(body) {
     return { error: 'Start date is required when dates are not flexible' };
   }
 
+  const budgetTier = body.budgetTier?.trim() || 'mid-range';
+  if (!BUDGET_TIERS.includes(budgetTier)) {
+    return { error: 'Invalid budget tier' };
+  }
+
+  const budgetAmountRaw = body.budgetAmount;
+  const budgetAmount =
+    budgetAmountRaw === undefined || budgetAmountRaw === null || budgetAmountRaw === ''
+      ? undefined
+      : parseFloat(budgetAmountRaw, 10);
+
+  if (budgetAmount !== undefined && (Number.isNaN(budgetAmount) || budgetAmount <= 0)) {
+    return { error: 'Budget amount must be greater than 0' };
+  }
+
+  const budgetCurrency = body.budgetCurrency?.trim() || undefined;
+  if (budgetAmount !== undefined && !budgetCurrency) {
+    return { error: 'Currency is required when a budget amount is provided' };
+  }
+
+  const budget = {
+    tier: budgetTier,
+    ...(budgetAmount !== undefined
+      ? { amount: budgetAmount, currency: budgetCurrency }
+      : {}),
+  };
+
   return {
-    destination: normalizeLocation(destination),
+    destination: normalizeLocation(resolvedPlace),
     numberOfDays,
     datePreference,
     startDate,
     endDate,
+    budget,
     creator: {
       name: body.creatorName?.trim() || undefined,
       instagramHandle: sanitizeHandle(body.instagramHandle) || undefined,
@@ -43,18 +83,7 @@ function validateSubmission(body) {
 }
 
 async function triggerTripGeneration(payload) {
-  const response = await fetch(`${getBaseUrl()}/api/trip/generate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.API_SECRET_KEY,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Trip generate failed: ${response.status}`);
-  }
+  await processTripGeneration(payload);
 }
 
 export default async function handler(req, res) {
@@ -62,7 +91,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const validated = validateSubmission(req.body);
+  const validated = await validateSubmission(req.body);
   if (validated.error) {
     return res.status(400).json({ success: false, error: validated.error });
   }
@@ -76,6 +105,7 @@ export default async function handler(req, res) {
     datePreference,
     startDate,
     endDate,
+    budget,
     creator,
   } = validated;
 
@@ -86,6 +116,7 @@ export default async function handler(req, res) {
     date_preference: datePreference,
     start_date: startDate,
     end_date: endDate,
+    budget,
     creator: {
       ...creator,
       instagramUserId,
@@ -99,7 +130,12 @@ export default async function handler(req, res) {
     { ex: 86400 }
   );
 
-  res.status(200).json({ success: true });
+  await initTripJob(instagramUserId, {
+    destination,
+    numberOfDays,
+  });
+
+  res.status(200).json({ success: true, jobId: instagramUserId });
 
   try {
     await connectDB();

@@ -1,4 +1,5 @@
 import redis from "./redis";
+import { processTripGeneration } from "./processTripGeneration";
 import {
   getBaseUrl,
   sendButtonTemplate,
@@ -63,18 +64,7 @@ async function sendBrowseLink(userId) {
 }
 
 async function triggerTripGeneration(body) {
-  const response = await fetch(`${getBaseUrl()}/api/trip/generate`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.API_SECRET_KEY,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Trip generate failed: ${response.status}`);
-  }
+  await processTripGeneration(body);
 }
 
 async function handleGenerateOwn(userId) {

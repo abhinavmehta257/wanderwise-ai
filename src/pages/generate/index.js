@@ -3,8 +3,15 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import NavBar from '../components/ui/NavBar';
 import Footer from '../components/ui/Footer';
+import TripGenerationProgress from '../components/ui/TripGenerationProgress';
+import { COMMON_CURRENCIES, getUserCurrency } from '../../lib/currency';
 
 const DAY_PRESETS = [3, 5, 7];
+const BUDGET_TIERS = [
+  { value: 'budget', label: 'Budget' },
+  { value: 'mid-range', label: 'Mid-range' },
+  { value: 'luxury', label: 'Luxury' },
+];
 
 function LocationAutocomplete({ value, onChange, onSelect }) {
   const [suggestions, setSuggestions] = useState([]);
@@ -57,6 +64,7 @@ function LocationAutocomplete({ value, onChange, onSelect }) {
 
   const handleSelect = (suggestion) => {
     onSelect(suggestion.value);
+    onChange(suggestion.value);
     setSuggestions([]);
     setIsOpen(false);
   };
@@ -68,7 +76,7 @@ function LocationAutocomplete({ value, onChange, onSelect }) {
         value={value}
         onChange={handleInputChange}
         onFocus={() => suggestions.length > 0 && setIsOpen(true)}
-        placeholder="e.g. Paris, Bali, Tokyo"
+        placeholder="e.g. Manali, Mumbai, Paris"
         autoComplete="off"
         className="w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-3 text-base text-[#181F23] outline-none focus:border-[#21BCBE] focus:ring-2 focus:ring-[#21BCBE]/20"
         required
@@ -79,7 +87,7 @@ function LocationAutocomplete({ value, onChange, onSelect }) {
       {isOpen && suggestions.length > 0 && (
         <ul className="absolute z-20 mt-2 max-h-56 w-full overflow-y-auto rounded-xl border border-[#E5E7EB] bg-white shadow-lg">
           {suggestions.map((suggestion) => (
-            <li key={suggestion.value}>
+            <li key={suggestion.id || suggestion.value}>
               <button
                 type="button"
                 onClick={() => handleSelect(suggestion)}
@@ -109,13 +117,23 @@ export default function GeneratePage() {
   const [isCustomDays, setIsCustomDays] = useState(false);
   const [creatorName, setCreatorName] = useState('');
   const [instagramHandle, setInstagramHandle] = useState('');
+  const [budgetTier, setBudgetTier] = useState('mid-range');
+  const [budgetAmount, setBudgetAmount] = useState('');
+  const [budgetCurrency, setBudgetCurrency] = useState('USD');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [jobId, setJobId] = useState(null);
+  const [submittedDestination, setSubmittedDestination] = useState('');
+  const [submittedDays, setSubmittedDays] = useState(5);
 
   const numberOfDays = isCustomDays
     ? parseInt(customDays, 10)
     : selectedDays;
+
+  useEffect(() => {
+    setBudgetCurrency(getUserCurrency());
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -136,6 +154,12 @@ export default function GeneratePage() {
       return;
     }
 
+    const parsedBudgetAmount = budgetAmount ? parseFloat(budgetAmount, 10) : undefined;
+    if (parsedBudgetAmount !== undefined && (Number.isNaN(parsedBudgetAmount) || parsedBudgetAmount <= 0)) {
+      setSubmitError('Budget amount must be greater than 0.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -149,6 +173,9 @@ export default function GeneratePage() {
           flexibleDates,
           startDate: flexibleDates ? undefined : startDate,
           endDate: flexibleDates ? undefined : endDate,
+          budgetTier,
+          budgetAmount: parsedBudgetAmount,
+          budgetCurrency: parsedBudgetAmount ? budgetCurrency : undefined,
           creatorName,
           instagramHandle,
         }),
@@ -160,6 +187,9 @@ export default function GeneratePage() {
         throw new Error(data.error || 'Something went wrong. Please try again.');
       }
 
+      setSubmittedDestination(destination);
+      setSubmittedDays(numberOfDays);
+      setJobId(data.jobId);
       setIsSuccess(true);
     } catch (error) {
       setSubmitError(error.message);
@@ -168,28 +198,24 @@ export default function GeneratePage() {
     }
   };
 
-  if (isSuccess) {
+  if (isSuccess && jobId) {
     return (
       <>
         <Head>
-          <title>Trip submitted | Wanderwise</title>
+          <title>Generating trip | Wanderwise</title>
         </Head>
         <NavBar />
-        <div className="mx-auto min-h-[60vh] max-w-lg px-6 py-12 text-center">
-          <div className="rounded-2xl bg-[#F0FDFA] px-6 py-10">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#21BCBE]/15 text-2xl">
-              ✈️
-            </div>
-            <h1 className="text-2xl font-bold text-[#181F23]">
-              We&apos;re generating your trip!
-            </h1>
-            <p className="mt-4 text-[#4B5563]">
-              {instagramUserId
-                ? "Hang tight — we'll send the link to your Instagram DMs once it's ready."
-                : 'Hang tight — your itinerary is being created. Check back on wanderwise.ai shortly.'}
-            </p>
-          </div>
-        </div>
+        <TripGenerationProgress
+          jobId={jobId}
+          destination={submittedDestination}
+          numberOfDays={submittedDays}
+          instagramUserId={instagramUserId}
+          onError={(message) => {
+            setSubmitError(message);
+            setIsSuccess(false);
+            setJobId(null);
+          }}
+        />
         <Footer />
       </>
     );
@@ -220,6 +246,9 @@ export default function GeneratePage() {
             <label className="mb-2 block text-sm font-semibold text-[#181F23]">
               Where do you want to go?
             </label>
+            <p className="mb-2 text-xs text-[#8C9094]">
+              Search for a city or destination — not a street address.
+            </p>
             <LocationAutocomplete
               value={destination}
               onChange={setDestination}
@@ -315,6 +344,61 @@ export default function GeneratePage() {
                 className="mt-3 w-full rounded-xl border border-[#E5E7EB] px-4 py-3 text-base outline-none focus:border-[#21BCBE] focus:ring-2 focus:ring-[#21BCBE]/20"
               />
             )}
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-[#181F23]">
+              What&apos;s your budget?
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {BUDGET_TIERS.map((tier) => (
+                <button
+                  key={tier.value}
+                  type="button"
+                  onClick={() => setBudgetTier(tier.value)}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                    budgetTier === tier.value
+                      ? 'bg-[#21BCBE] text-white'
+                      : 'bg-[#F5F5F5] text-[#181F23] hover:bg-[#EAEAEA]'
+                  }`}
+                >
+                  {tier.label}
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs text-[#8C9094]">
+                  Total budget (optional)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={budgetAmount}
+                  onChange={(event) => setBudgetAmount(event.target.value)}
+                  placeholder="e.g. 2500"
+                  className="w-full rounded-xl border border-[#E5E7EB] px-4 py-3 text-base outline-none focus:border-[#21BCBE] focus:ring-2 focus:ring-[#21BCBE]/20"
+                />
+              </div>
+              {budgetAmount && (
+                <div>
+                  <label className="mb-1 block text-xs text-[#8C9094]">
+                    Currency
+                  </label>
+                  <select
+                    value={budgetCurrency}
+                    onChange={(event) => setBudgetCurrency(event.target.value)}
+                    className="w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-3 text-base outline-none focus:border-[#21BCBE] focus:ring-2 focus:ring-[#21BCBE]/20"
+                  >
+                    {COMMON_CURRENCIES.map((currency) => (
+                      <option key={currency} value={currency}>
+                        {currency}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-4 rounded-xl bg-[#FAFAFA] p-4">

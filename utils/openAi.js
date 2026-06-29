@@ -1,163 +1,79 @@
-import OpenAI from "openai";
-const openai = new OpenAI({ apiKey: process.env.OPEN_AI_KEY });
-import redis from "./redis";
 import TripDetails from '../model/itinerary';
 import connectDB from "../db/db";
 import { buildLocationQuery, normalizeLocation } from "./location";
-const { createApi } = require('unsplash-js');
+import { createResponse } from "./ai/responses";
+import { TRIP_PLANNING_SCHEMA } from "./ai/schemas/tripPlanning";
+import { TRIP_PLANNER_INSTRUCTIONS } from "./ai/prompts/tripPlanner";
+import { getDestinationImage } from "./destinationImage";
 
-const unsplash = createApi({
-  accessKey: process.env.UNSPLASH_ACCESS_KEY
-});
+const MAX_GENERATION_ATTEMPTS = 3;
+export const MAX_TRIP_DESCRIPTION_LENGTH = 229;
 
-const ACTIVE_RUN_STATUSES = new Set([
-  "queued",
-  "in_progress",
-  "requires_action",
-  "cancelling",
-]);
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-async function waitForActiveRuns(thread_id, maxWaitMs = 120000) {
-  const deadline = Date.now() + maxWaitMs;
-
-  while (Date.now() < deadline) {
-    const runs = await openai.beta.threads.runs.list(thread_id, {
-      limit: 5,
-      order: "desc",
-    });
-    const activeRun = runs.data.find((run) => ACTIVE_RUN_STATUSES.has(run.status));
-
-    if (!activeRun) {
-      return;
-    }
-
-    if (activeRun.status === "requires_action") {
-      console.warn("Cancelling run waiting for unsupported tool action:", activeRun.id);
-      await openai.beta.threads.runs.cancel(thread_id, activeRun.id);
-      await sleep(1000);
-      continue;
-    }
-
-    await sleep(2000);
+export function validateItineraryComplete(data, expectedDays) {
+  if (!data?.itinerary || !Array.isArray(data.itinerary)) {
+    return false;
   }
 
-  const runs = await openai.beta.threads.runs.list(thread_id, { limit: 5, order: "desc" });
-  for (const run of runs.data) {
-    if (ACTIVE_RUN_STATUSES.has(run.status)) {
-      try {
-        await openai.beta.threads.runs.cancel(thread_id, run.id);
-      } catch (error) {
-        console.warn("Failed to cancel active run:", run.id, error.message);
-      }
+  if (data.itinerary.length !== expectedDays) {
+    return false;
+  }
+
+  for (let day = 1; day <= expectedDays; day += 1) {
+    const dayEntry = data.itinerary.find(
+      (entry) => Number(entry.day) === day
+    );
+
+    if (!dayEntry?.title?.trim()) {
+      return false;
+    }
+
+    if (!Array.isArray(dayEntry.activities) || dayEntry.activities.length < 2) {
+      return false;
+    }
+
+    const hasCompleteActivity = dayEntry.activities.every(
+      (activity) =>
+        activity?.time_of_day?.trim() &&
+        activity?.activity?.trim() &&
+        activity?.details?.trim()
+    );
+
+    if (!hasCompleteActivity) {
+      return false;
     }
   }
+
+  return true;
 }
 
-async function withUserLock(user_id, fn) {
-  const lockKey = `lock:${user_id}`;
-
-  for (let attempt = 0; attempt < 60; attempt++) {
-    const acquired = await redis.set(lockKey, "1", { nx: true, ex: 120 });
-    if (acquired) {
-      try {
-        return await fn();
-      } finally {
-        await redis.del(lockKey);
-      }
-    }
-    await sleep(1000);
+function truncateDescription(text, maxLength = MAX_TRIP_DESCRIPTION_LENGTH) {
+  if (!text || text.length <= maxLength) {
+    return text;
   }
 
-  throw new Error(`Timed out waiting for assistant lock for user ${user_id}`);
-}
+  const ellipsis = "…";
+  const sliceLength = maxLength - ellipsis.length;
+  const trimmed = text.slice(0, sliceLength);
+  const lastSpace = trimmed.lastIndexOf(" ");
 
-export async function getDestinationImage(destination) {
-  try {
-    const result = await unsplash.search.getPhotos({
-      query: destination,
-      page: 1,
-      perPage: 1,
-      orientation: 'landscape'
-    });
-
-    if (result.response?.results?.length > 0) {
-      return result.response.results[0].urls.regular;
-    }
-    return "/traveller.jpeg"; // Fallback image
-  } catch (error) {
-    console.error('Error fetching destination image:', error);
-    return "/traveller.jpeg"; // Fallback image
+  if (lastSpace > sliceLength * 0.6) {
+    return `${trimmed.slice(0, lastSpace).trimEnd()}${ellipsis}`;
   }
+
+  return `${trimmed.trimEnd()}${ellipsis}`;
 }
 
+function normalizeTripData(data, location) {
+  if (location && data?.overview) {
+    data.overview.destination = location;
+  }
 
-export const callAssistant = async (message_text, user_id, assistant_id = "asst_MdQvLytr35uEM52fKsRSuhEX", _thread_id) => {
-  return withUserLock(user_id, async () => {
-    try {
-      let thread_id = _thread_id;
+  if (data?.overview?.description) {
+    data.overview.description = truncateDescription(data.overview.description);
+  }
 
-      if (!thread_id) {
-        thread_id = await redis.get(`thread:${user_id}`);
-      }
-
-      if (thread_id) {
-        try {
-          await openai.beta.threads.retrieve(thread_id);
-        } catch (error) {
-          console.warn("Stale thread ID, removing from Redis:", thread_id, error.message);
-          await redis.del(`thread:${user_id}`);
-          thread_id = null;
-        }
-      }
-
-      if (!thread_id) {
-        const thread = await openai.beta.threads.create();
-        console.log("New thread created:", thread.id);
-        thread_id = thread.id;
-
-        await redis.set(`thread:${user_id}`, thread_id, { ex: 86400 });
-      }
-
-      await waitForActiveRuns(thread_id);
-
-      await openai.beta.threads.messages.create(thread_id, {
-        role: "user",
-        content: message_text,
-      });
-
-      const run = await openai.beta.threads.runs.createAndPoll(thread_id, {
-        assistant_id,
-      });
-
-      if (run.status === "completed") {
-        const messages = await openai.beta.threads.messages.list(run.thread_id);
-        const response = messages.data[0].content[0].text.value;
-        console.log("Assistant response:", response);
-        return response;
-      }
-
-      console.error("Assistant run did not complete:", {
-        status: run.status,
-        last_error: run.last_error,
-        incomplete_details: run.incomplete_details,
-        thread_id,
-        assistant_id,
-      });
-
-      if (run.status === "failed") {
-        await redis.del(`thread:${user_id}`);
-      }
-
-      return "The assistant couldn't process your request. Please try again.";
-    } catch (error) {
-      console.error("Error in callAssistant:", error);
-      return "An error occurred. Please try again.";
-    }
-  });
-};
-
+  return data;
+}
 
 export async function findExistingTrip(location, numberOfDays) {
   await connectDB();
@@ -167,12 +83,32 @@ export async function findExistingTrip(location, numberOfDays) {
   });
 }
 
-function buildTripPrompt({
+function formatBudgetContext(budget) {
+  if (!budget?.tier) {
+    return "";
+  }
+
+  const tierLabel = budget.tier.replace(/-/g, " ");
+  let context = `Budget preference: ${tierLabel}.`;
+
+  if (budget.amount && budget.currency) {
+    context += ` Target total trip cost around ${budget.amount} ${budget.currency}; ensure budget_breakdown.total is close to this figure.`;
+  } else {
+    context += " No fixed budget cap — estimate realistic costs for this tier.";
+  }
+
+  return context;
+}
+
+export function buildTripPrompt({
   location,
   numberOfDays,
   datePreference,
   startDate,
   endDate,
+  budget,
+  creatorName,
+  retryNote,
 }) {
   let dateContext = "Dates are flexible — suggest a general best time to visit.";
 
@@ -182,7 +118,94 @@ function buildTripPrompt({
       : `Travel start date: ${startDate}.`;
   }
 
-  return `Generate a complete ${numberOfDays}-day trip itinerary for ${location}. ${dateContext} Return the response as JSON only.`;
+  const budgetContext = formatBudgetContext(budget);
+  const authorContext = creatorName
+    ? `Use "${creatorName}" as meta_data.author.`
+    : 'Use "Wanderwise" as meta_data.author if no creator is provided.';
+
+  const parts = [
+    `Generate a complete ${numberOfDays}-day trip itinerary for ${location}.`,
+    `Set overview.destination to exactly "${location}".`,
+    dateContext,
+    budgetContext,
+    authorContext,
+    `Set number_of_days to exactly ${numberOfDays}.`,
+    `The itinerary array MUST contain exactly ${numberOfDays} objects with day values 1 through ${numberOfDays}.`,
+    `Each day MUST include morning, afternoon, and evening activities with location, duration, and practical details.`,
+    `overview.description MUST be under 230 characters (max ${MAX_TRIP_DESCRIPTION_LENGTH}) — short teaser only.`,
+    "Select dining and activities that match the budget level.",
+    retryNote,
+    "Return the response as JSON only.",
+  ].filter(Boolean);
+
+  return parts.join(" ");
+}
+
+async function generateTripData({
+  location,
+  numberOfDays,
+  datePreference,
+  startDate,
+  endDate,
+  budget,
+  creatorName,
+  userId,
+  onProgress,
+}) {
+  let lastData = null;
+
+  for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt += 1) {
+    const retryNote =
+      attempt > 1
+        ? `CRITICAL RETRY ${attempt}: Previous output was incomplete. You MUST return exactly ${numberOfDays} full days in itinerary with day numbers 1 to ${numberOfDays}, each with detailed morning, afternoon, and evening activities.`
+        : "";
+
+    if (onProgress) {
+      await onProgress(
+        attempt > 1 ? "Polishing your itinerary..." : "Gathering trip details...",
+        attempt > 1 ? 46 : 52
+      );
+    }
+
+    const prompt = buildTripPrompt({
+      location,
+      numberOfDays,
+      datePreference,
+      startDate,
+      endDate,
+      budget,
+      creatorName,
+      retryNote,
+    });
+
+    const { text } = await createResponse({
+      instructions: TRIP_PLANNER_INSTRUCTIONS,
+      input: prompt,
+      schema: TRIP_PLANNING_SCHEMA,
+      schemaName: "trip_planning",
+      userId: `${userId}:trip-gen`,
+    });
+
+    const data = JSON.parse(text);
+    lastData = data;
+
+    if (validateItineraryComplete(data, numberOfDays)) {
+      data.number_of_days = numberOfDays;
+      return normalizeTripData(data, location);
+    }
+
+    console.warn(
+      `Itinerary validation failed for ${location} (${numberOfDays} days) on attempt ${attempt}`,
+      {
+        receivedDays: data.itinerary?.length,
+        days: data.itinerary?.map((entry) => entry.day),
+      }
+    );
+  }
+
+  throw new Error(
+    `Could not generate a complete ${numberOfDays}-day itinerary for ${location}`
+  );
 }
 
 export async function createTrip(user_id, options) {
@@ -193,7 +216,9 @@ export async function createTrip(user_id, options) {
     startDate,
     endDate,
     creator,
+    budget,
     force = false,
+    onProgress,
   } = options;
 
   await connectDB();
@@ -201,6 +226,9 @@ export async function createTrip(user_id, options) {
   if (!force) {
     const existing = await findExistingTrip(location, numberOfDays);
     if (existing) {
+      if (onProgress) {
+        await onProgress("Found a matching trip!", 100);
+      }
       return {
         slug: existing.slug,
         isExisting: true,
@@ -209,31 +237,31 @@ export async function createTrip(user_id, options) {
     }
   }
 
-  const assistant_id = "asst_xNE0S4tbeV82C0u6NGajPlVc";
-  const prompt = buildTripPrompt({
+  if (onProgress) {
+    await onProgress("Polishing your itinerary...", 44);
+  }
+
+  const data = await generateTripData({
     location,
     numberOfDays,
     datePreference,
     startDate,
     endDate,
+    budget,
+    creatorName: creator?.name,
+    userId: user_id,
+    onProgress,
   });
 
-  const response = await callAssistant(
-    prompt,
-    `${user_id}:trip-gen`,
-    assistant_id
-  );
-  const data = JSON.parse(response);
-  const { number_of_days } = data;
   const { title } = data.meta_data;
   const { destination } = data.overview;
   const slug = titleToSlug(title);
-  const destination_image = await getDestinationImage(destination);
+  const destination_image = await getDestinationImage(location, destination);
 
   const newTrip = new TripDetails({
     slug,
-    numberOfDays: number_of_days,
-    location: normalizeLocation(destination),
+    numberOfDays,
+    location: normalizeLocation(location || destination),
     title,
     destination_image_url: destination_image,
     data,
@@ -241,6 +269,7 @@ export async function createTrip(user_id, options) {
     datePreference,
     startDate: startDate || undefined,
     endDate: endDate || undefined,
+    budgetPreference: budget || undefined,
   });
 
   await newTrip.save();
@@ -269,9 +298,9 @@ export const getGeneratedTrip = async (
 
 function titleToSlug(title) {
   return title
-    .toLowerCase() // Convert to lowercase
-    .trim() // Remove leading/trailing spaces
-    .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-'); // Remove consecutive hyphens
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
 }

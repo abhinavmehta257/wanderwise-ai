@@ -1,12 +1,6 @@
 // Legacy Instagram reply router — no longer used by the webhook.
 // Kept for reference; Instagram DMs now use utils/instagramFlow.js.
-import { callAssistant, getGeneratedTrip } from "./openAi";
-import {
-  getBaseUrl,
-  sendButtonTemplate,
-  sendMessage,
-  sendQuickReply,
-} from "./sendMessage";
+import { getBaseUrl, sendButtonTemplate, sendMessage, sendQuickReply } from "./sendMessage";
 
 export const createQuickReplies = (items) => {
   return items.map((item) => {
@@ -19,6 +13,7 @@ export const createQuickReplies = (items) => {
     return { title, payload };
   });
 };
+
 export const replay = async (user_id, text) => {
   let data;
   try {
@@ -29,16 +24,13 @@ export const replay = async (user_id, text) => {
   }
 
   const { prompt, suggestions } = data;
-  console.log(data.trip_details.is_finalized);
-  
-  if (data.trip_details.is_finalized) {
-    // First response - acknowledge the request
+
+  if (data.trip_details?.is_finalized) {
     await sendMessage(
       user_id,
       `Starting to generate your trip details for ${data.trip_details.destination}. You'll receive the link shortly.`
     );
 
-    // Trigger trip generation in a separate API call
     try {
       const response = await fetch(`${getBaseUrl()}/api/trip/generate`, {
         method: "POST",
@@ -57,18 +49,15 @@ export const replay = async (user_id, text) => {
         throw new Error(`Trip generate failed: ${response.status}`);
       }
     } catch (error) {
-      console.log('Trip generation error:', error);
+      console.log("Trip generation error:", error);
       await sendMessage(
         user_id,
         "We encountered an error starting trip generation. Please try again later."
       );
     }
+  } else if (!suggestions || suggestions.length === 0) {
+    await sendMessage(user_id, prompt);
   } else {
-    // Handle other cases as before
-    if (!suggestions || suggestions.length === 0) {
-      await sendMessage(user_id, prompt);
-    } else {
-      await sendQuickReply(user_id, prompt, suggestions);
-    }
+    await sendQuickReply(user_id, prompt, suggestions);
   }
 };

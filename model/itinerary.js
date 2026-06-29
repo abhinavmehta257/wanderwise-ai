@@ -40,6 +40,11 @@ const TripDetailsSchema = new Schema({
     },
     startDate: String,
     endDate: String,
+    budgetPreference: {
+        tier: String,
+        amount: Number,
+        currency: String,
+    },
     createdAt: {
         type: Date,
         default: Date.now

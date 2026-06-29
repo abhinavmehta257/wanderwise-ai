@@ -6,6 +6,7 @@ import NavBar from '../components/ui/NavBar';
 import BlogCard from '../components/ui/BlogCard';
 import Footer from '../components/ui/Footer';
 import GenerateTripFab from '../components/ui/GenerateTripFab';
+import { toAbsoluteAssetUrl } from '../../../lib/imageUrl';
 
 const TripPage = ({ trip, relatedTrips = [] }) => {
   if (!trip) {
@@ -15,6 +16,7 @@ const TripPage = ({ trip, relatedTrips = [] }) => {
   const { description, start_date } = trip.data.overview;
   const { itinerary, local_tips, budget_breakdown } = trip.data;
   const { destination_image_url, title } = trip;
+  const ogImageUrl = toAbsoluteAssetUrl(destination_image_url);
 
   return (
     <>
@@ -23,7 +25,7 @@ const TripPage = ({ trip, relatedTrips = [] }) => {
         <meta name="description" content={description} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
-        <meta property="og:image" content={destination_image_url} />
+        <meta property="og:image" content={ogImageUrl} />
         <meta property="og:url" content={`https://wanderwise.vercel.app/trip/${trip.slug}`} />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />

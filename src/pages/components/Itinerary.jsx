@@ -12,7 +12,7 @@ const Itinerary = ({itinerary, start_date, local_tips, budget_breakdown}) => {
            
            <div className='border-t mt-[28px]' >
                 <div className='mb-2 mt-4'>
-                    <h3 className="font-semibold">Customs</h3>
+                    <h3 className="font-semibold">Things to know</h3>
                     <ul className="list-disc ml-7 space-y-1">
                     {local_tips?.customs ? local_tips.customs.map((custom, index) => (
                         <li key={index}>{custom}</li>
