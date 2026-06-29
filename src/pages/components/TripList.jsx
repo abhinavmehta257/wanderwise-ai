@@ -4,17 +4,32 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import BlogCard from './ui/BlogCard';
 import Skeleton from './ui/Skeleton';
 
-const TripList = ({ initialTrips = [], initialHasMore = false, limit = 9 }) => {
+const TripList = ({
+  initialTrips = [],
+  initialHasMore = false,
+  limit = 9,
+  uniqueDestinations = false,
+}) => {
   const [trips, setTrips] = useState(initialTrips);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [page, setPage] = useState(2);
 
   const fetchTrips = async () => {
     try {
-      const response = await axios.get(`/api/trip?page=${page}&limit=${limit}`);
-      const newTrips = response.data;
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+      });
+      if (uniqueDestinations) {
+        params.set('uniqueDestinations', 'true');
+      }
 
-      if (newTrips.length < limit) {
+      const response = await axios.get(`/api/trip?${params.toString()}`);
+      const payload = response.data;
+      const newTrips = uniqueDestinations ? payload.trips : payload;
+      const moreAvailable = uniqueDestinations ? payload.hasMore : newTrips.length >= limit;
+
+      if (!moreAvailable) {
         setHasMore(false);
       }
 

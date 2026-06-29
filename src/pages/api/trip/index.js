@@ -1,4 +1,4 @@
-import { getTrips } from '../../../../lib/trips';
+import { getTrips, getUniqueDestinationTrips } from '../../../../lib/trips';
 import connectDB from '../../../../db/db';
 import TripDetails from '../../../../model/itinerary';
 
@@ -6,8 +6,15 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 9;
+    const uniqueDestinations = req.query.uniqueDestinations === 'true';
+
+    if (uniqueDestinations) {
+      const { trips, hasMore } = await getUniqueDestinationTrips({ page, limit });
+      res.status(200).json({ trips, hasMore });
+      return;
+    }
+
     const tripDetails = await getTrips({ page, limit });
-    console.log("tripDetails:", tripDetails);
     res.status(200).json(tripDetails);
     return;
   }

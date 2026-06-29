@@ -17,14 +17,14 @@ const Index = ({ initialTrips = [], initialHasMore = false }) => {
           crossOrigin="anonymous"
         />
         <meta name="google-adsense-account" content="ca-pub-9744648621612550" />
-        <title>All Trips | Wanderwise</title>
+        <title>Explore Destinations | Wanderwise</title>
       </Head>
       <NavBar />
       <div className="flex align-center justify-center px-[32px] mb-[32px]">
         <div className=" h-full  md:w-[70%] lg:w-[70%] sm:w-[100%]">
           <div className="text-center">
-            <h1 className="text-[#333333] text-3xl font-bold">All Trips</h1>
-            <p className="text-[#333333]">See all the trips we have planned.</p>
+            <h1 className="text-[#333333] text-3xl font-bold">Explore Destinations</h1>
+            <p className="text-[#333333]">Discover trips to unique destinations we have planned.</p>
           </div>
           <div className="mt-6 max-w-xl mx-auto">
             <TripSearchBar />
@@ -33,6 +33,7 @@ const Index = ({ initialTrips = [], initialHasMore = false }) => {
             initialTrips={initialTrips}
             initialHasMore={initialHasMore}
             limit={LIMIT}
+            uniqueDestinations
           />
         </div>
       </div>
@@ -44,13 +45,16 @@ const Index = ({ initialTrips = [], initialHasMore = false }) => {
 
 export async function getServerSideProps() {
   try {
-    const { getTrips } = await import('../../lib/trips');
-    const initialTrips = await getTrips({ page: 1, limit: LIMIT });
+    const { getUniqueDestinationTrips } = await import('../../lib/trips');
+    const { trips: initialTrips, hasMore: initialHasMore } = await getUniqueDestinationTrips({
+      page: 1,
+      limit: LIMIT,
+    });
 
     return {
       props: {
         initialTrips,
-        initialHasMore: initialTrips.length >= LIMIT,
+        initialHasMore,
       },
     };
   } catch (error) {
