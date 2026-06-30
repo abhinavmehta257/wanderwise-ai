@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import ShareButton from './ui/ShareButton';
 
 
 const Hero = ({ title, description, trip_duration, destination_image_url, creator }) => {
@@ -9,8 +10,13 @@ const Hero = ({ title, description, trip_duration, destination_image_url, creato
     return (
             <div className='my-4 text-[black]'>
                 <div className='py-2'>
-                    <h1 className='text-3xl font-bold'>{title}</h1>
-                    <p className='text-xl text-[#8C9094]'>{trip_duration}</p>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h1 className='text-3xl font-bold'>{title}</h1>
+                        <p className='text-xl text-[#8C9094]'>{trip_duration}</p>
+                      </div>
+                      <ShareButton title={title} text={description} />
+                    </div>
                     {(creatorName || instagramHandle) && (
                       <p className="mt-2 text-sm text-[#8C9094]">
                         Planned by{' '}

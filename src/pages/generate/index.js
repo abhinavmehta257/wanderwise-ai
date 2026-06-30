@@ -200,7 +200,7 @@ export default function GeneratePage() {
 
   if (isSuccess && jobId) {
     return (
-      <>
+      <div className="bg-white">
         <Head>
           <title>Generating trip | Wanderwise</title>
         </Head>
@@ -217,12 +217,12 @@ export default function GeneratePage() {
           }}
         />
         <Footer />
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="bg-white">
       <Head>
         <title>Plan a Trip | Wanderwise</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -447,6 +447,6 @@ export default function GeneratePage() {
         </form>
       </div>
       <Footer />
-    </>
+    </div>
   );
 }
