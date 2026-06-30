@@ -3,7 +3,7 @@ import LegalPageLayout from '@/components/LegalPageLayout';
 
 const Terms = () => {
   return (
-    <LegalPageLayout title="Terms of Use" lastUpdated="June 27, 2025">
+    <LegalPageLayout title="Terms of Use" lastUpdated="June 27, 2025" path="/terms">
       <p>
         These Terms of Use (&quot;Terms&quot;) govern your access to and use of Wanderwise AI
         (&quot;Wanderwise,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), including our

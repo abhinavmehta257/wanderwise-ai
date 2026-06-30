@@ -3,7 +3,7 @@ import LegalPageLayout from '@/components/LegalPageLayout';
 
 const Cookies = () => {
   return (
-    <LegalPageLayout title="Cookie Policy" lastUpdated="June 27, 2025">
+    <LegalPageLayout title="Cookie Policy" lastUpdated="June 27, 2025" path="/cookies">
       <p>
         This Cookie Policy explains how Wanderwise AI (&quot;Wanderwise,&quot; &quot;we,&quot;
         &quot;us,&quot; or &quot;our&quot;) uses cookies and similar technologies when you visit our

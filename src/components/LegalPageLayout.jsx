@@ -1,14 +1,15 @@
-import Head from 'next/head';
+import SeoHead from '@/components/SeoHead';
 import NavBar from '@/pages/components/ui/NavBar';
 import Footer from '@/pages/components/ui/Footer';
 
-const LegalPageLayout = ({ title, lastUpdated, children }) => {
+const LegalPageLayout = ({ title, lastUpdated, path, children }) => {
   return (
     <div className="min-h-screen flex flex-col bg-white text-[#333333]">
-      <Head>
-        <title>{title} | Wanderwise</title>
-        <meta name="description" content={`${title} for Wanderwise AI travel itinerary service.`} />
-      </Head>
+      <SeoHead
+        title={title}
+        description={`${title} for Wanderwise AI travel itinerary service.`}
+        path={path}
+      />
       <NavBar />
       <main className="flex-1 px-6 py-10 md:px-12 lg:px-24">
         <article className="mx-auto max-w-3xl">

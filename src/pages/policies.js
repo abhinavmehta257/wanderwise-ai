@@ -3,7 +3,7 @@ import LegalPageLayout from '@/components/LegalPageLayout';
 
 const Policies = () => {
   return (
-    <LegalPageLayout title="Privacy Policy" lastUpdated="June 27, 2025">
+    <LegalPageLayout title="Privacy Policy" lastUpdated="June 27, 2025" path="/policies">
       <p>
         This Privacy Policy describes how Wanderwise AI (&quot;Wanderwise,&quot; &quot;we,&quot;
         &quot;us,&quot; or &quot;our&quot;) collects, uses, and shares information when you use our

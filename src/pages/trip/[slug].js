@@ -1,4 +1,4 @@
-import Head from 'next/head';
+import SeoHead from '../../components/SeoHead';
 import Itinerary from '../components/Itinerary';
 import Hero from '../components/hero';
 import Skeleton from '../components/ui/Skeleton';
@@ -7,6 +7,8 @@ import BlogCard from '../components/ui/BlogCard';
 import Footer from '../components/ui/Footer';
 import GenerateTripFab from '../components/ui/GenerateTripFab';
 import { toAbsoluteAssetUrl } from '../../../lib/imageUrl';
+import { getBlobPathname } from '../../../lib/og/fetchHeroImage';
+import { buildTripOgImageUrl } from '../../../lib/seo';
 
 const TripPage = ({ trip, relatedTrips = [] }) => {
   if (!trip) {
@@ -15,29 +17,30 @@ const TripPage = ({ trip, relatedTrips = [] }) => {
 
   const { description, start_date } = trip.data.overview;
   const { itinerary, local_tips, budget_breakdown } = trip.data;
-  const { destination_image_url, title } = trip;
-  const ogImageUrl = toAbsoluteAssetUrl(destination_image_url);
+  const { destination_image_url, title, location, numberOfDays } = trip;
+  const ogImageUrl = buildTripOgImageUrl({
+    title,
+    location,
+    days: numberOfDays,
+    pathname: getBlobPathname(destination_image_url),
+    image: toAbsoluteAssetUrl(destination_image_url),
+  });
 
   return (
     <>
-      <Head>
-        <title>{title ? title : ''} | Wanderwise</title>
-        <meta name="description" content={description} />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content={ogImageUrl} />
-        <meta property="og:url" content={`https://wanderwise.vercel.app/trip/${trip.slug}`} />
-        <meta property="og:type" content="website" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@wanderwise" />
-        <meta name="twitter:creator" content="@wanderwise" />
+      <SeoHead
+        title={title}
+        description={description}
+        path={`/trip/${trip.slug}`}
+        ogImage={ogImageUrl}
+      >
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9744648621612550"
           crossOrigin="anonymous"
         />
         <meta name="google-adsense-account" content="ca-pub-9744648621612550" />
-      </Head>
+      </SeoHead>
       <NavBar />
       <div className="w-full bg-white pb-[32px]">
         <div className="md:w-[50%] lg:w-[50%] sm:w-[100%] mx-auto">

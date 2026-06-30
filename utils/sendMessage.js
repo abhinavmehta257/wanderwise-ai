@@ -24,15 +24,9 @@ function logMetaError(action, error, context = {}) {
   });
 }
 
-export const getBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_BASE_URL) {
-    return process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, "");
-  }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  return "http://localhost:3000";
-};
+import { getBaseUrl } from "../lib/seo";
+
+export { getBaseUrl };
 
 export const sendMessage = async (userId, messageText) => {
   logMetaSend("text", userId);

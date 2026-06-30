@@ -3,7 +3,7 @@ import LegalPageLayout from '@/components/LegalPageLayout';
 
 const DataStorage = () => {
   return (
-    <LegalPageLayout title="Data Storage & Use" lastUpdated="June 27, 2025">
+    <LegalPageLayout title="Data Storage & Use" lastUpdated="June 27, 2025" path="/data-storage">
       <p>
         This page describes what data Wanderwise AI collects, where it is stored, how long we keep
         it, and how it is used. For broader privacy rights and legal terms, see our{' '}

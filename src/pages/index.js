@@ -1,4 +1,4 @@
-import Head from 'next/head';
+import SeoHead from '../components/SeoHead';
 import NavBar from './components/ui/NavBar';
 import Footer from './components/ui/Footer';
 import TripList from './components/TripList';
@@ -10,15 +10,18 @@ const LIMIT = 9;
 const Index = ({ initialTrips = [], initialHasMore = false }) => {
   return (
     <div className="bg-white">
-      <Head>
+      <SeoHead
+        title="Explore Destinations"
+        description="Discover trips to unique destinations we have planned with AI-powered itineraries."
+        path="/"
+      >
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9744648621612550"
           crossOrigin="anonymous"
         />
         <meta name="google-adsense-account" content="ca-pub-9744648621612550" />
-        <title>Explore Destinations | Wanderwise</title>
-      </Head>
+      </SeoHead>
       <NavBar />
       <div className="flex align-center justify-center px-[32px] mb-[32px]">
         <div className=" h-full  md:w-[70%] lg:w-[70%] sm:w-[100%]">

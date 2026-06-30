@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import Head from 'next/head';
+import SeoHead from '../../components/SeoHead';
 import { useRouter } from 'next/router';
 import NavBar from '../components/ui/NavBar';
 import Footer from '../components/ui/Footer';
@@ -201,9 +201,11 @@ export default function GeneratePage() {
   if (isSuccess && jobId) {
     return (
       <div className="bg-white">
-        <Head>
-          <title>Generating trip | Wanderwise</title>
-        </Head>
+        <SeoHead
+          title="Generating Trip"
+          description="Your AI-powered Wanderwise itinerary is being created."
+          path="/generate"
+        />
         <NavBar />
         <TripGenerationProgress
           jobId={jobId}
@@ -223,10 +225,13 @@ export default function GeneratePage() {
 
   return (
     <div className="bg-white">
-      <Head>
-        <title>Plan a Trip | Wanderwise</title>
+      <SeoHead
+        title="Plan a Trip"
+        description="Tell us where you want to go and we'll build your personalized AI travel itinerary."
+        path="/generate"
+      >
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
+      </SeoHead>
       <NavBar />
       <div className="mx-auto max-w-lg px-4 py-6 pb-12 sm:px-6">
         <div className="mb-6 text-center">
